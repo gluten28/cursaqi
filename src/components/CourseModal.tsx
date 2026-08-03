@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, BookOpen, Star, ShieldCheck, BookmarkCheck, Lock, Play, Film, Award, CheckCircle2, ArrowRight } from "lucide-react";
+import { X, BookOpen, Star, ShieldCheck, BookmarkCheck, Lock, Play, Film, Award, CheckCircle2, ArrowRight, HelpCircle } from "lucide-react";
 import { Course, UserProfile, CourseVideo, Quiz, PaymentTicket } from "../types";
 import { getFinalExamQuestions, shuffleExamQuestions } from "../utils/examUtils";
 import { dbSaveExamAttempt } from "../supabase";
