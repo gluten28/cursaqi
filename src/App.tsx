@@ -24,6 +24,7 @@ import NotificationCenter, { MAPPED_ACTIONS } from "./components/NotificationCen
 import ToastContainer from "./components/ToastContainer";
 import ShareModal from "./components/ShareModal";
 import AuthWallModal from "./components/AuthWallModal";
+import LiveChatWidget from "./components/LiveChatWidget";
 import { getFullShareUrl } from "./utils/shareUtils";
 import { updateSEOTags, resetDefaultSEO } from "./utils/seo";
 import {
@@ -1558,6 +1559,15 @@ export default function App() {
         onGoToLogin={() => {
           setIsAuthWallOpen(false);
           setSelectedCourse(null);
+          setAuthScreenMode("login");
+          setCurrentView("auth");
+        }}
+      />
+
+      {/* Live Real-Time Community & Support Chat Widget with Robot Icon */}
+      <LiveChatWidget
+        currentUser={currentUser}
+        onRequireAuth={() => {
           setAuthScreenMode("login");
           setCurrentView("auth");
         }}

@@ -172,5 +172,14 @@ export interface PaymentLog {
   createdAt: string;
 }
 
+export type ChatCategory = "ideia" | "pergunta" | "sugestao" | "ajuda" | "geral";
 
-
+export interface ChatMessage {
+  id: string;
+  userId?: string;
+  authorName: string;
+  authorRole: "admin" | "formador" | "aluno" | "visitante";
+  message: string;
+  category: ChatCategory;
+  createdAt: string;
+}

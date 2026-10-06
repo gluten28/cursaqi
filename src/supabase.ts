@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, PlatformNotification, DidacticMaterial, PaymentMethod, PaymentTicket, PaymentNotification, PaymentLog, ExamAttempt } from "./types";
+import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, PlatformNotification, DidacticMaterial, PaymentMethod, PaymentTicket, PaymentNotification, PaymentLog, ExamAttempt, ChatMessage, ChatCategory } from "./types";
 import { initialCategories, initialCourses, initialVideos, initialQuizzes, initialBanners, initialUsers } from "./data";
 
 
@@ -1069,8 +1069,168 @@ export async function dbUploadBannerImage(file: File): Promise<string | null> {
   return signedData?.signedUrl || null;
 }
 
+// --- COMMUNITY & SUPPORT CHAT MAPPING & API ---
 
+export function mapChatMessageToJS(row: any): ChatMessage {
+  return {
+    id: String(row.id || ""),
+    userId: row.user_id ? String(row.user_id) : undefined,
+    authorName: String(row.author_name || "Utilizador"),
+    authorRole: (["admin", "formador", "aluno", "visitante"].includes(row.author_role) 
+      ? row.author_role 
+      : "aluno") as ChatMessage["authorRole"],
+    message: String(row.message || ""),
+    category: (["ideia", "pergunta", "sugestao", "ajuda", "geral"].includes(row.category)
+      ? row.category
+      : "geral") as ChatCategory,
+    createdAt: row.created_at || new Date().toISOString()
+  };
+}
 
+const CHAT_STORAGE_KEY = "cursaqi_local_chat_messages";
 
+export const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
+  {
+    id: "welcome-aldo-valige",
+    authorName: "Formador Aldo Valige",
+    authorRole: "formador",
+    message: "Olá a todos! Sejam muito bem-vindos ao chat comunitário da CUrsaQi. Deixem aqui as vossas dúvidas sobre informática, ideias de novos cursos, sugestões ou pedidos de ajuda. Responderei a todos assim que possível!",
+    category: "geral",
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString()
+  },
+  {
+    id: "welcome-system-tip",
+    authorName: "Assistente CUrsaQi",
+    authorRole: "admin",
+    message: "Dica: Pode filtrar as mensagens no topo por Ideias, Dúvidas, Sugestões ou Ajuda. Participe e colabore com outros colegas!",
+    category: "ajuda",
+    createdAt: new Date(Date.now() - 3600000 * 6).toISOString()
+  }
+];
 
+function getLocalChatMessages(): ChatMessage[] {
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return INITIAL_CHAT_MESSAGES;
+}
 
+function saveLocalChatMessage(msg: ChatMessage) {
+  try {
+    const current = getLocalChatMessages();
+    const updated = [...current, msg];
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(updated.slice(-100)));
+  } catch (e) {}
+}
+
+export async function dbGetChatMessages(): Promise<ChatMessage[]> {
+  try {
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .limit(100);
+
+    if (error) {
+      console.warn("Tabela chat_messages ainda não criada no Supabase (usando armazenamento local):", error.message);
+      return getLocalChatMessages();
+    }
+
+    if (!data || data.length === 0) {
+      const local = getLocalChatMessages();
+      return local.length > 0 ? local : INITIAL_CHAT_MESSAGES;
+    }
+
+    return data.map(mapChatMessageToJS);
+  } catch (err) {
+    console.warn("Erro ao obter mensagens de chat do Supabase:", err);
+    return getLocalChatMessages();
+  }
+}
+
+export async function dbSendChatMessage(
+  msg: Omit<ChatMessage, "id" | "createdAt">
+): Promise<ChatMessage> {
+  const dbPayload = {
+    user_id: msg.userId || null,
+    author_name: msg.authorName.trim(),
+    author_role: msg.authorRole || "visitante",
+    message: msg.message.trim(),
+    category: msg.category || "geral"
+  };
+
+  try {
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert([dbPayload])
+      .select()
+      .single();
+
+    if (error) {
+      console.warn("Aviso ao guardar mensagem de chat no Supabase (guardando localmente):", error.message);
+      const fallbackMsg: ChatMessage = {
+        id: "local_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+        userId: msg.userId,
+        authorName: msg.authorName.trim(),
+        authorRole: msg.authorRole,
+        message: msg.message.trim(),
+        category: msg.category,
+        createdAt: new Date().toISOString()
+      };
+      saveLocalChatMessage(fallbackMsg);
+      return fallbackMsg;
+    }
+
+    const created = mapChatMessageToJS(data);
+    saveLocalChatMessage(created);
+    return created;
+  } catch (err) {
+    console.error("Exceção ao enviar mensagem de chat:", err);
+    const fallbackMsg: ChatMessage = {
+      id: "local_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      userId: msg.userId,
+      authorName: msg.authorName.trim(),
+      authorRole: msg.authorRole,
+      message: msg.message.trim(),
+      category: msg.category,
+      createdAt: new Date().toISOString()
+    };
+    saveLocalChatMessage(fallbackMsg);
+    return fallbackMsg;
+  }
+}
+
+export function dbSubscribeToChat(onNewMessage: (msg: ChatMessage) => void): () => void {
+  try {
+    const channel = supabase
+      .channel("public:chat_messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_messages"
+        },
+        (payload) => {
+          if (payload && payload.new) {
+            const mapped = mapChatMessageToJS(payload.new);
+            onNewMessage(mapped);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  } catch (err) {
+    console.warn("Falha ao subscrever canal Realtime de chat_messages:", err);
+    return () => {};
+  }
+}
