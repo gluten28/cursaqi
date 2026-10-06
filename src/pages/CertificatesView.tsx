@@ -95,7 +95,7 @@ export default function CertificatesView({
 
                     <div className="border-t border-slate-100 pt-2.5 flex flex-col text-[10.5px] font-mono text-slate-500 space-y-0.5">
                       <span>ID: <strong className="text-slate-700">{progress.certificateId}</strong></span>
-                      <span>Docente: <strong className="text-slate-700">{course.instructorName}</strong></span>
+                      <span>Formador: <strong className="text-slate-700">{course.instructorName}</strong></span>
                     </div>
                   </div>
 

@@ -23,7 +23,7 @@ export default function HistoryView({ user }: HistoryViewProps) {
         <div className="bg-white border border-slate-200 p-8 rounded-sm text-left shadow-xs" id="history-header-card">
           <div className="space-y-2">
             <span className="text-[10px] bg-slate-100 text-slate-800 px-3 py-1 rounded-sm uppercase font-mono font-bold tracking-wider">
-              Registo Académico de Aproveitamento
+              Histórico de Estudo & Aulas
             </span>
             <h2 className="font-display font-bold text-2xl md:text-3.5xl text-[#0a2540] tracking-tight">
               Historial de Atividades

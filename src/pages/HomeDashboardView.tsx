@@ -69,7 +69,7 @@ export default function HomeDashboardView({
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-8 px-4 text-left" id="student-main-dashboard">
       <div className="w-full max-w-6xl mx-auto space-y-8" id="dashboard-layout-container">
         
-        {/* Academic greeting block with subscription plan description */}
+        {/* Greeting block with subscription plan description */}
         <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-sm shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="dashboard-welcome">
           <div className="space-y-1.5">
             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#0d9488]">CURSAQI • Painel Geral do Aluno</span>
@@ -78,8 +78,8 @@ export default function HomeDashboardView({
             </h2>
             <div className="w-16 h-[2px] bg-[#0d9488] mb-3" />
             <p className="text-xs text-slate-500 font-sans leading-normal max-w-lg">
-              Esta é a sua Página Inicial unificada de monitoria académica. 
-              Aqui pode analisar o progresso dos cursos activos, consultar inquéritos respondidos e acompanhar o seu rendimento.
+              Esta é a sua Página Inicial de acompanhamento dos seus cursos de informática. 
+              Aqui pode analisar o seu progresso nas aulas, rever exercícios e acompanhar a sua aprendizagem prática.
             </p>
           </div>
 
@@ -175,8 +175,8 @@ export default function HomeDashboardView({
                 <div className="py-12 text-center bg-slate-50 border border-slate-100 rounded-sm space-y-4" id="enrolled-empty-block">
                   <PlayCircle className="h-10 w-10 text-slate-300 mx-auto" />
                   <div className="space-y-1">
-                    <h4 className="font-bold text-slate-700 text-xs">Sem matrículas académicas activas</h4>
-                    <p className="text-[11px] text-slate-400 max-w-xs mx-auto">Vá até à nossa página de cursos para se matricular em qualquer disciplina e monitorar sua jornada aqui.</p>
+                    <h4 className="font-bold text-slate-700 text-xs">Sem cursos inscritos no momento</h4>
+                    <p className="text-[11px] text-slate-400 max-w-xs mx-auto">Vá até ao catálogo de cursos para se inscrever em qualquer curso e acompanhar o seu progresso aqui.</p>
                   </div>
                   <button
                     onClick={() => onNavigateToView("courses")}
@@ -312,11 +312,11 @@ export default function HomeDashboardView({
               </div>
             </div>
 
-            {/* Academic Honor regulations layout */}
+            {/* Honor regulations layout */}
             <div className="bg-[#0a2540] text-slate-100 border border-slate-200 p-5 rounded-sm text-xs text-left space-y-3" id="honor-regulations-dashboard">
               <div className="flex items-center gap-2 text-[#0d9488]">
                 <Award className="h-5 w-5 stroke-2 shrink-0" />
-                <h4 className="font-mono font-black uppercase tracking-wider text-[10px]">Criação Académica CURSAQI</h4>
+                <h4 className="font-mono font-black uppercase tracking-wider text-[10px]">Cursos CURSAQI // Formador Aldo Valige</h4>
               </div>
               <p className="font-sans leading-relaxed text-[10.5px] text-slate-300">
                 Lembre-se: os questionários rápidos de consolidação podem ser respondidos múltiplas vezes até atingir rendimento sólido de aprovação. Use o Histórico para focar nos seus erros.

@@ -22,6 +22,10 @@ import UserPaymentsView from "./pages/UserPaymentsView";
 import PurchaseModal from "./components/PurchaseModal";
 import NotificationCenter, { MAPPED_ACTIONS } from "./components/NotificationCenter";
 import ToastContainer from "./components/ToastContainer";
+import ShareModal from "./components/ShareModal";
+import AuthWallModal from "./components/AuthWallModal";
+import { getFullShareUrl } from "./utils/shareUtils";
+import { updateSEOTags, resetDefaultSEO } from "./utils/seo";
 import {
   seedDatabaseIfEmpty,
   dbGetCategories,
@@ -106,6 +110,22 @@ export default function App() {
 
   // Cookie preference consent state
   const [cookiePreference, setCookiePreference] = useState<string | null>(null);
+
+  // Social Share states
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareModalData, setShareModalData] = useState<{
+    title: string;
+    description?: string;
+    url: string;
+    imageUrl?: string;
+  }>({
+    title: "CUrsaQi",
+    url: typeof window !== "undefined" ? window.location.origin : "https://cursaqi.com"
+  });
+
+  // Auth Wall state (mandatory account creation to view contents)
+  const [isAuthWallOpen, setIsAuthWallOpen] = useState(false);
+  const [pendingCourseForAuth, setPendingCourseForAuth] = useState<Course | null>(null);
 
 
 
@@ -280,6 +300,37 @@ export default function App() {
             setCurrentUser(null);
           }
         }
+
+        // Check deep-linking query parameters (?course=... or ?view=...)
+        if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          const courseParam = urlParams.get("course");
+          const viewParam = urlParams.get("view");
+
+          if (courseParam) {
+            const matchedCourse = coursesWithRealCounts.find(c => c.id === courseParam);
+            if (matchedCourse) {
+              if (storedSession) {
+                setSelectedCourse(matchedCourse);
+                updateSEOTags({
+                  title: matchedCourse.title,
+                  description: matchedCourse.description,
+                  imageUrl: matchedCourse.image,
+                  url: getFullShareUrl(matchedCourse.id)
+                });
+              } else {
+                // Unauthenticated visitor arrived via shared course link: trigger auth-wall!
+                setPendingCourseForAuth(matchedCourse);
+                try {
+                  sessionStorage.setItem("cursaqi_pending_course_id", matchedCourse.id);
+                } catch (e) {}
+                setIsAuthWallOpen(true);
+              }
+            }
+          } else if (viewParam && ["courses", "about"].includes(viewParam)) {
+            setCurrentView(viewParam);
+          }
+        }
       } catch (err) {
         console.error("Error loading data from Supabase, falling back to local defaults:", err);
       }
@@ -398,6 +449,12 @@ export default function App() {
     setCurrentUser(null);
     localStorage.removeItem("cursaqi_session_v2");
     setPaymentTickets([]);
+    setSelectedCourse(null);
+    setIsStudying(false);
+    resetDefaultSEO();
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", window.location.pathname);
+    }
     setCurrentView("home");
   };
 
@@ -411,7 +468,34 @@ export default function App() {
     const freshMethods = await dbGetPaymentMethods().catch(() => []);
     if (freshMethods.length > 0) setPaymentMethods(freshMethods);
 
-    if (checkedUser.role === "admin") {
+    // Check if user was trying to access a course before logging in (Auth-Wall)
+    let pendingId = pendingCourseForAuth?.id;
+    if (!pendingId) {
+      try {
+        pendingId = sessionStorage.getItem("cursaqi_pending_course_id") || undefined;
+      } catch (e) {}
+    }
+    const targetCourse = pendingId ? courses.find(c => c.id === pendingId) : null;
+
+    if (targetCourse) {
+      setSelectedCourse(targetCourse);
+      setIsStudying(false);
+      setPendingCourseForAuth(null);
+      try {
+        sessionStorage.removeItem("cursaqi_pending_course_id");
+      } catch (e) {}
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `?course=${encodeURIComponent(targetCourse.id)}`);
+      }
+      updateSEOTags({
+        title: targetCourse.title,
+        description: targetCourse.description,
+        imageUrl: targetCourse.image,
+        url: getFullShareUrl(targetCourse.id)
+      });
+      const userTkts = await dbGetPaymentTickets(checkedUser.id).catch(() => []);
+      setPaymentTickets(userTkts);
+    } else if (checkedUser.role === "admin") {
       setCurrentView("admin");
       const [dbUsers, allTickets] = await Promise.all([
         dbGetUsers(),
@@ -435,6 +519,93 @@ export default function App() {
     }
     setPaymentTickets([]);
   };
+
+  // --- SOCIAL SHARING TRIGGERS ---
+  const handleShareSite = () => {
+    setShareModalData({
+      title: "CUrsaQi - Cursos Online de Informática com Aldo Valige",
+      description: "Plataforma de cursos gratuitos e à venda na área de Informática, programação e redes criada pelo Formador Aldo Valige para quem quer aprender.",
+      url: getFullShareUrl(),
+      imageUrl: "https://ik.imagekit.io/mdsiwq57o/CursaQI/Logotipo.png"
+    });
+    setIsShareModalOpen(true);
+  };
+
+  const handleShareCourse = (course: Course) => {
+    setShareModalData({
+      title: `${course.title} | CUrsaQi`,
+      description: `Confira o curso "${course.title}" com o formador ${course.instructorName} na plataforma CUrsaQi!`,
+      url: getFullShareUrl(course.id),
+      imageUrl: course.image
+    });
+    setIsShareModalOpen(true);
+  };
+
+  // --- COURSE OPENING WITH AUTH-WALL RESTRICTION ---
+  // Requisito: "mas que utilizadores sem conta tenha que obrigatoriamente criar conta para ver os conteudos"
+  const handleOpenCourse = (course: Course) => {
+    if (!currentUser) {
+      setPendingCourseForAuth(course);
+      try {
+        sessionStorage.setItem("cursaqi_pending_course_id", course.id);
+      } catch (e) {}
+      setIsAuthWallOpen(true);
+      return;
+    }
+
+    setSelectedCourse(course);
+    setIsStudying(false);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", `?course=${encodeURIComponent(course.id)}`);
+    }
+    updateSEOTags({
+      title: course.title,
+      description: course.description,
+      imageUrl: course.image,
+      url: getFullShareUrl(course.id)
+    });
+  };
+
+  const handleCloseCourse = () => {
+    setSelectedCourse(null);
+    setIsStudying(false);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", window.location.pathname);
+    }
+    resetDefaultSEO();
+  };
+
+  // Popstate hook to support browser forward and back buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const courseParam = urlParams.get("course");
+      if (courseParam) {
+        const found = courses.find(c => c.id === courseParam);
+        if (found) {
+          if (currentUser) {
+            setSelectedCourse(found);
+            setIsStudying(false);
+          } else {
+            setPendingCourseForAuth(found);
+            setIsAuthWallOpen(true);
+          }
+          return;
+        }
+      }
+      setSelectedCourse(null);
+      setIsStudying(false);
+      resetDefaultSEO();
+      const viewParam = urlParams.get("view");
+      if (viewParam) {
+        setCurrentView(viewParam);
+      } else {
+        setCurrentView("home");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [courses, currentUser]);
 
   // --- MATRICULA FLOW ---
   const handleEnrollCourse = (courseId: string) => {
@@ -845,9 +1016,8 @@ export default function App() {
       <Header
         currentView={currentView}
         onViewChange={(view) => {
-          setSelectedCourse(null);
+          handleCloseCourse();
           setActiveCertificate(null);
-          setIsStudying(false);
           
           const requiresAuth = ["history", "certificates", "profile", "payments"].includes(view);
           if (requiresAuth && !currentUser) {
@@ -865,6 +1035,9 @@ export default function App() {
             }
           } else {
             setCurrentView(view);
+            if (typeof window !== "undefined") {
+              window.history.pushState(null, "", view === "home" ? window.location.pathname : `?view=${encodeURIComponent(view)}`);
+            }
           }
         }}
         searchQuery={searchQuery}
@@ -884,21 +1057,20 @@ export default function App() {
         isAdmin={currentUser?.role === "admin"}
         onLogout={handleLogout}
         onLoginClick={() => {
-          setSelectedCourse(null);
+          handleCloseCourse();
           setActiveCertificate(null);
-          setIsStudying(false);
           setAuthScreenMode("login");
           setCurrentView("auth");
         }}
         onRegisterClick={() => {
-          setSelectedCourse(null);
+          handleCloseCourse();
           setActiveCertificate(null);
-          setIsStudying(false);
           setAuthScreenMode("register");
           setCurrentView("auth");
         }}
         unreadNotificationsCount={notifications.filter(n => !n.read).length}
         onNotificationToggle={() => setIsNotificationOpen(!isNotificationOpen)}
+        onShareSite={handleShareSite}
       />
 
       {/* Notification drawer component with simulator */}
@@ -923,10 +1095,7 @@ export default function App() {
           banners={banners}
           courses={courses}
           onActionClick={handleScrollToCourses}
-          onCourseClick={(course) => {
-            setSelectedCourse(course);
-            setIsStudying(false);
-          }}
+          onCourseClick={(course) => handleOpenCourse(course)}
         />
       )}
 
@@ -980,10 +1149,7 @@ export default function App() {
             videos={videos}
             currentUser={currentUser}
             onEnroll={handleEnrollCourse}
-            onGoBack={() => {
-              setSelectedCourse(null);
-              setIsStudying(false);
-            }}
+            onGoBack={handleCloseCourse}
             isEnrolled={
               currentUser?.planType === "pago" ||
               !!currentUser?.enrolledCourseProgress?.some((p) => p.courseId === selectedCourse.id) ||
@@ -1004,6 +1170,7 @@ export default function App() {
               setPurchaseCourse(c);
               setIsPurchaseModalOpen(true);
             }}
+            onShare={handleShareCourse}
           />
         </main>
       ) : currentView === "auth" ? (
@@ -1012,7 +1179,11 @@ export default function App() {
             onLoginSuccess={handleLoginSuccess}
             onRegisterSuccess={handleRegisterSuccess}
             onCancel={() => {
-              setSelectedCourse(null);
+              handleCloseCourse();
+              setPendingCourseForAuth(null);
+              try {
+                sessionStorage.removeItem("cursaqi_pending_course_id");
+              } catch (e) {}
               setCurrentView("home");
             }}
             initialMode={authScreenMode}
@@ -1028,12 +1199,10 @@ export default function App() {
             courses={courses}
             categories={categories}
             videos={videos}
-            onViewCourseDetails={(c) => {
-              setSelectedCourse(c);
-              setIsStudying(false);
-            }}
+            onViewCourseDetails={handleOpenCourse}
             favorites={currentUser?.favorites || []}
             onToggleWishlist={handleToggleWishlist}
+            onShareCourse={handleShareCourse}
           />
         </main>
       ) : currentView === "history" && currentUser ? (
@@ -1125,14 +1294,13 @@ export default function App() {
             courses={courses}
             videos={videos}
             onViewCourseDetails={(c) => {
-              setSelectedCourse(c);
-              setIsStudying(false);
+              handleOpenCourse(c);
             }}
             onNavigateToView={(view) => {
               setCurrentView(view);
             }}
             onOpenStudyModal={(c) => {
-              setSelectedCourse(c);
+              handleOpenCourse(c);
               setIsStudying(true);
             }}
           />
@@ -1173,7 +1341,7 @@ export default function App() {
                   </h3>
                   <div className="w-12 h-[3px] bg-[#0d9488] mt-2 mb-3" />
                   <p className="text-xs text-slate-500 font-sans" id="courses-sec-byline">
-                    Nossos programas técnicos profissionalizantes de alto rendimento acadêmico.
+                    Cursos práticos de Informática, redes e programação criados pelo Formador Aldo Valige.
                   </p>
                 </div>
 
@@ -1217,10 +1385,8 @@ export default function App() {
                     course={course}
                     isWishlisted={!!currentUser?.favorites?.includes(course.id)}
                     onToggleWishlist={handleToggleWishlist}
-                    onViewDetails={(c) => {
-                      setSelectedCourse(c);
-                      setIsStudying(false);
-                    }}
+                    onViewDetails={handleOpenCourse}
+                    onShare={handleShareCourse}
                   />
                 ))}
 
@@ -1267,7 +1433,7 @@ export default function App() {
           
           {/* Description */}
           <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed" id="footer-tagline">
-            Uma plataforma acadêmica unificada focada no progresso profissional continuado do estudante com aulas virtuais dedicadas.
+            Plataforma de cursos online criada pelo Formador Aldo Valige com cursos gratuitos e à venda para quem quer aprender Informática e Tecnologia.
           </p>
 
           {/* Contact Information */}
@@ -1294,7 +1460,7 @@ export default function App() {
           {/* Rights reserved */}
           <div className="text-[10px] uppercase tracking-wider text-slate-500 font-mono space-y-1">
             <div>© 2026 CURSAQI. Todos os direitos reservados.</div>
-            <div className="text-[9px] text-slate-500">QUALIFICAÇÃO ACADÉMICA PROFISSIONAL UNIFICADA</div>
+            <div className="text-[9px] text-slate-500">CURSOS ONLINE DE INFORMÁTICA // FORMADOR ALDO VALIGE</div>
           </div>
         </div>
       </footer>
@@ -1311,7 +1477,7 @@ export default function App() {
                 POLÍTICA DE PRIVACIDADE // VALIDAÇÃO DE COOKIES
               </span>
               <p className="text-slate-300 leading-relaxed max-w-4xl">
-                Utilizamos cookies técnicos essenciais de sessão para assegurar e otimizar o acompanhamento do seu progresso de estudos, validação de certificados profissionais e segurança na autenticação académica de acordo com as diretrizes vigentes. Confirme se autoriza o uso para prosseguir.
+                Utilizamos cookies técnicos essenciais de sessão para assegurar o funcionamento da plataforma, acompanhamento do seu progresso nas aulas e segurança no acesso à sua conta. Confirme se autoriza o uso para prosseguir.
               </p>
             </div>
             <div className="flex items-center gap-3 w-full lg:w-auto shrink-0 mt-2 lg:mt-0 font-bold uppercase tracking-wider">
@@ -1358,6 +1524,44 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Social Share Dialog */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={shareModalData.title}
+        description={shareModalData.description}
+        url={shareModalData.url}
+        imageUrl={shareModalData.imageUrl}
+        onCopiedToast={(msg) => {
+          triggerPlatformNotification("com_energia", "Ligação Copiada!", msg);
+        }}
+      />
+
+      {/* Mandatory Auth-Wall Modal for guests accessing course contents */}
+      <AuthWallModal
+        isOpen={isAuthWallOpen}
+        onClose={() => {
+          setIsAuthWallOpen(false);
+          setPendingCourseForAuth(null);
+          try {
+            sessionStorage.removeItem("cursaqi_pending_course_id");
+          } catch (e) {}
+        }}
+        course={pendingCourseForAuth}
+        onGoToRegister={() => {
+          setIsAuthWallOpen(false);
+          setSelectedCourse(null);
+          setAuthScreenMode("register");
+          setCurrentView("auth");
+        }}
+        onGoToLogin={() => {
+          setIsAuthWallOpen(false);
+          setSelectedCourse(null);
+          setAuthScreenMode("login");
+          setCurrentView("auth");
+        }}
+      />
 
     </div>
   );

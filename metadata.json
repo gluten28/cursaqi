@@ -1,5 +1,5 @@
 {
-  "name": "CUrsaQi",
+  "name": "CursaQi",
   "description": "An interactive e-learning platform featuring course navigation, categorizations, and an administrative panel for customized course creation and management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

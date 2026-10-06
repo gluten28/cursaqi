@@ -108,17 +108,17 @@ export const MAPPED_ACTIONS = [
     name: "Orgulhoso (Emissão de Certificado)",
     triggerType: "Parabéns / Formatura",
     imageUrl: "https://ik.imagekit.io/mdsiwq57o/CursaQI/accoes/orgulhoso.png",
-    defaultTitle: "Certificado Registado Oficialmente!",
-    defaultMessage: "Extraordinário! Você superou o aproveitamento mínimo de 80% e já pode emitir seu diploma de titulação profissional na rede.",
+    defaultTitle: "Certificado de Conclusão Disponível!",
+    defaultMessage: "Extraordinário! Você superou o aproveitamento mínimo de 80% e já pode emitir seu certificado de conclusão de curso livre.",
     bgClass: "bg-slate-50 border-slate-200 text-slate-900"
   },
   {
     id: "pintando",
     name: "Pintando (Submeter Exercício)",
-    triggerType: "Avaliação Pedagógica",
+    triggerType: "Avaliação Prática",
     imageUrl: "https://ik.imagekit.io/mdsiwq57o/CursaQI/accoes/pintando.png",
     defaultTitle: "Código Submetido para Avaliação",
-    defaultMessage: "Seu arquivo de prova prática foi depositado na caixa de envios. Um professor tutor irá rever sua lógica nos próximos dias.",
+    defaultMessage: "Seu arquivo de prova prática foi depositado na caixa de envios. O formador Aldo Valige irá rever sua lógica nos próximos dias.",
     bgClass: "bg-slate-50 border-slate-200 text-slate-900"
   },
   {
@@ -135,8 +135,8 @@ export const MAPPED_ACTIONS = [
     name: "Raiva (Cancelamento de Chamada)",
     triggerType: "Aviso Operacional",
     imageUrl: "https://ik.imagekit.io/mdsiwq57o/CursaQI/accoes/raiva.png",
-    defaultTitle: "Reagendamento de Mentoria Necessário",
-    defaultMessage: "Infelizmente o suporte ao vivo agendado com o mentor colidiu com outro horário de urgência académica. Reagende sem custos.",
+    defaultTitle: "Reagendamento de Apoio Necessário",
+    defaultMessage: "Infelizmente o suporte ao vivo agendado com o formador colidiu com outro horário urgente. Pode reagendar sem custos.",
     bgClass: "bg-slate-50 border-slate-200 text-slate-900"
   },
   {

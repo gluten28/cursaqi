@@ -1,5 +1,5 @@
 import React from "react";
-import { Heart, BookOpen, Star, ArrowRight } from "lucide-react";
+import { Heart, BookOpen, Star, ArrowRight, Share2 } from "lucide-react";
 import { Course } from "../types";
 
 interface CourseCardProps {
@@ -8,6 +8,7 @@ interface CourseCardProps {
   isWishlisted: boolean;
   onToggleWishlist: (courseId: string) => void;
   onViewDetails: (course: Course) => void;
+  onShare?: (course: Course) => void;
 }
 
 export default function CourseCard({
@@ -15,6 +16,7 @@ export default function CourseCard({
   isWishlisted,
   onToggleWishlist,
   onViewDetails,
+  onShare,
 }: CourseCardProps) {
   // Safe helper to render price in Mozambique Metical (MT)
   const renderPrice = () => {
@@ -70,7 +72,7 @@ export default function CourseCard({
             e.stopPropagation();
             onToggleWishlist(course.id);
           }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 cursor-pointer flex items-center justify-center hover:bg-white border border-slate-100 transition-colors"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 cursor-pointer flex items-center justify-center hover:bg-white border border-slate-100 transition-colors z-10"
           title={isWishlisted ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           id={`wishlist-btn-${course.id}`}
         >
@@ -81,6 +83,21 @@ export default function CourseCard({
             id={`wishlist-icon-${course.id}`}
           />
         </button>
+
+        {/* Dynamic Share Button */}
+        {onShare && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare(course);
+            }}
+            className="absolute top-3 right-12 w-8 h-8 rounded-full bg-white/90 cursor-pointer flex items-center justify-center hover:bg-white border border-slate-100 transition-colors text-slate-500 hover:text-[#0d9488] z-10"
+            title="Partilhar curso nas redes sociais"
+            id={`share-btn-${course.id}`}
+          >
+            <Share2 className="h-4 w-4" id={`share-icon-${course.id}`} />
+          </button>
+        )}
       </div>
 
       {/* Main Card Body */}
@@ -124,7 +141,7 @@ export default function CourseCard({
         {/* Footer actions: price + Details Button */}
         <div className="pt-4 border-t border-slate-50 flex items-center justify-between" id={`card-footer-${course.id}`}>
           <div id={`price-showcase-${course.id}`}>
-            <div className="text-[10px] uppercase font-mono text-slate-400 leading-none mb-1">Propina</div>
+            <div className="text-[10px] uppercase font-mono text-slate-400 leading-none mb-1">Valor</div>
             {renderPrice()}
           </div>
 

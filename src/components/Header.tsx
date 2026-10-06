@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Heart, User, Settings, Menu, X, LogOut, Bell } from "lucide-react";
+import { Search, Heart, User, Settings, Menu, X, LogOut, Bell, Share2 } from "lucide-react";
 
 interface HeaderProps {
   currentView: string;
@@ -14,6 +14,7 @@ interface HeaderProps {
   onLogout?: () => void;
   unreadNotificationsCount?: number;
   onNotificationToggle?: () => void;
+  onShareSite?: () => void;
 }
 
 export default function Header({
@@ -29,6 +30,7 @@ export default function Header({
   onLogout,
   unreadNotificationsCount = 0,
   onNotificationToggle,
+  onShareSite,
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -66,7 +68,7 @@ export default function Header({
         <div className="hidden md:flex relative max-w-sm w-full mx-6" id="header-search-wrapper">
           <input
             type="text"
-            placeholder="Pesquisar por título de curso ou docente..."
+            placeholder="Pesquisar por título de curso ou formador..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-sm text-sm focus:outline-hidden focus:ring-1 focus:ring-[#0d9488] focus:border-[#0d9488] placeholder-slate-400 font-sans"
@@ -188,6 +190,18 @@ export default function Header({
             )}
           </button>
 
+          {/* Share Platform Button (Desktop) */}
+          {onShareSite && (
+            <button
+              onClick={onShareSite}
+              className="flex items-center text-slate-600 gap-1 hover:text-[#0d9488] transition-colors cursor-pointer"
+              id="header-share-site-btn"
+              title="Partilhar o site CUrsaQi nas redes sociais"
+            >
+              <Share2 className="h-5 w-5 text-slate-400 hover:text-slate-800 transition-colors" />
+            </button>
+          )}
+
           {/* Divider line */}
           <div className="h-6 w-[1px] bg-slate-200" id="header-divider-line" />
 
@@ -293,7 +307,7 @@ export default function Header({
           <div className="relative mt-3 w-full" id="mobile-search-wrapper">
             <input
               type="text"
-              placeholder="Pesquisar por título de curso ou docente..."
+              placeholder="Pesquisar por título de curso ou formador..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-sm text-sm focus:outline-hidden focus:ring-1 focus:ring-[#0d9488] focus:border-[#0d9488]"
@@ -394,13 +408,27 @@ export default function Header({
                 Painel do Administrador
               </button>
             )}
+
+            {onShareSite && (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onShareSite();
+                }}
+                className="text-left py-2 border-b border-slate-50 flex items-center gap-2 text-slate-700 hover:text-[#0d9488]"
+                id="mobile-nav-share"
+              >
+                <Share2 className="h-4 w-4 text-[#0d9488]" />
+                <span>Partilhar CUrsaQi</span>
+              </button>
+            )}
           </nav>
 
            {/* Mobile Auth displaying (Guest or Logged User) */}
           {userEmail ? (
             <div className="bg-slate-50 p-3.5 rounded-sm text-xs mt-2 text-left flex items-center justify-between" id="mobile-user-card">
               <div>
-                <div className="text-slate-400 uppercase font-mono tracking-wider font-semibold">Conta Académica</div>
+                <div className="text-slate-400 uppercase font-mono tracking-wider font-semibold">Conta do Estudante</div>
                 <div className="font-semibold text-slate-700 mt-1 font-mono break-all" id="mobile-user-email">{userEmail}</div>
               </div>
               <button

@@ -21,10 +21,10 @@ export default function CtaBanners({ onLearnMoreLeft, onLearnMoreRight }: CtaBan
               Aprenda em Conjunto com
             </span>
             <h3 className="font-display text-2xl font-bold text-[#0a2540] mt-2 mb-3" id="expert-title">
-              Docentes Especializados
+              Formadores Especializados
             </h3>
             <p className="text-slate-500 text-sm font-sans mb-6 leading-relaxed" id="expert-desc">
-              Se procura desenvolver uma competência específica, ligue-se ao nosso corpo de docentes altamente qualificados e com vasta experiência de mercado.
+              Se procura desenvolver uma competência específica, ligue-se ao nosso corpo de formadores altamente qualificados e com vasta experiência de mercado.
             </p>
             <button
               onClick={onLearnMoreLeft}

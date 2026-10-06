@@ -235,7 +235,7 @@ export default function CourseModal({
                 </span>
                 <span className="text-slate-200">|</span>
                 <span className="font-mono bg-slate-50 px-2 py-0.5 border border-slate-100 text-slate-600 font-bold uppercase text-[9px] rounded-xs">
-                  {course.price === 0 ? "Acesso Gratuito" : `Propina: ${course.price.toLocaleString("pt-PT")} MT`}
+                  {course.price === 0 ? "Acesso Gratuito" : `Valor: ${course.price.toLocaleString("pt-PT")} MT`}
                 </span>
               </div>
             </div>
@@ -480,7 +480,7 @@ export default function CourseModal({
                   <div className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-[#0a2540]" />
                     <h3 className="font-display font-bold text-sm text-[#0a2540] uppercase tracking-wider">
-                      Exame Final & Certificação Académica
+                      Exame Final & Certificado de Conclusão
                     </h3>
                   </div>
 
@@ -497,13 +497,13 @@ export default function CourseModal({
                             Parabéns! Obteve {enrollmentProgress.examScore}% de aproveitamento no Exame Final.
                           </h4>
                           <p className="text-xs text-slate-650 leading-relaxed max-w-2xl font-sans">
-                            A sua qualificação profissional foi validada com êxito. O seu certificado digital está disponível para visualização e impressão imediata.
+                            A conclusão do seu curso foi validada com êxito! O seu certificado digital de conclusão está disponível para visualização e impressão imediata.
                           </p>
                         </div>
 
                         <div className="bg-white p-4 border border-emerald-200 rounded-sm text-xs text-slate-600 space-y-1.5 max-w-xl">
                           <span className="block font-bold text-slate-750 text-[10px] uppercase tracking-wider">Entrega do Certificado Físico:</span>
-                          <span className="block">O seu <strong>certificado físico de participação</strong> oficial será assinado e enviado sem custos para:</span>
+                          <span className="block">O seu <strong>certificado físico de conclusão</strong> será assinado pelo Formador Aldo Valige e enviado para:</span>
                           <span className="block bg-slate-50 p-2 border.5 border-slate-100 rounded-xs font-mono text-[10.5px]">
                             {currentUser?.address || "Endereço não cadastrado. Por favor, atualize o seu perfil."}
                           </span>
@@ -673,14 +673,14 @@ export default function CourseModal({
 
                   {/* Instructor profile card */}
                   <div className="p-4 border border-slate-100 rounded-sm space-y-2" id="modal-instructor-wrap">
-                    <span className="text-[10px] uppercase font-mono text-slate-400 tracking-wider font-bold">Docente do Curso</span>
+                    <span className="text-[10px] uppercase font-mono text-slate-400 tracking-wider font-bold">Formador do Curso</span>
                     <div className="flex items-center gap-2.5">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-mono font-bold text-[#0d9488]" id="instructor-avatar">
                         {course.instructorAvatar || course.instructorName.slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex flex-col text-left">
                         <span className="text-xs font-bold text-slate-800 leading-tight">{course.instructorName}</span>
-                        <span className="text-[10px] text-slate-500 leading-none mt-0.5">{course.instructorTitle || "Professor Certificado"}</span>
+                        <span className="text-[10px] text-slate-500 leading-none mt-0.5">{course.instructorTitle || "Formador Certificado"}</span>
                       </div>
                     </div>
                   </div>
@@ -793,7 +793,7 @@ export default function CourseModal({
                     <div className="bg-teal-50 border border-teal-100 p-5 rounded-sm space-y-3 mt-4 text-slate-800">
                       <h4 className="text-xs font-bold text-[#0e7490] uppercase tracking-wider">Pronto para Começar?</h4>
                       <p className="text-xs text-slate-600 leading-normal font-sans">
-                        A sua conta de estudante ativa tem total autorização académica para iniciar este programa de ensino. Confirme a matrícula abaixo de forma imediata.
+                        A sua conta de estudante está pronta para iniciar este curso. Confirme a sua inscrição abaixo de forma imediata.
                       </p>
                       <button
                         type="button"
@@ -801,7 +801,7 @@ export default function CourseModal({
                         className="w-full inline-flex items-center justify-center gap-1.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider py-3 px-6 rounded-sm transition-colors cursor-pointer"
                       >
                         <BookmarkCheck className="h-4 w-4" />
-                        <span>Confirmar Matrícula Imediata</span>
+                        <span>Confirmar Inscrição no Curso</span>
                       </button>
                     </div>
                   )}
@@ -814,7 +814,7 @@ export default function CourseModal({
         {/* Footer controls layout inside 40px padding target */}
         <div className="p-5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between" id="modal-footer-wrapper">
           <div className="text-left select-none">
-            <span className="text-[10px] text-slate-400 font-mono block">CURSAQI PLATAFORMA DE ENSINO // QUALIFICAÇÃO E DESENVOLVIMENTO</span>
+            <span className="text-[10px] text-slate-400 font-mono block">CURSAQI • CURSOS DE INFORMÁTICA // FORMADOR ALDO VALIGE</span>
           </div>
 
           <div className="flex items-center justify-end gap-3">

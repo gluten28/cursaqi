@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Heart, Clock, PlaySquare, BookOpen, Sparkles, SlidersHorizontal } from "lucide-react";
+import { Search, Heart, Clock, PlaySquare, BookOpen, Sparkles, SlidersHorizontal, Share2 } from "lucide-react";
 import { Course, Category, CourseVideo } from "../types";
 
 interface CoursesCatalogViewProps {
@@ -9,6 +9,7 @@ interface CoursesCatalogViewProps {
   onViewCourseDetails: (course: Course) => void;
   favorites: string[];
   onToggleWishlist: (courseId: string) => void;
+  onShareCourse?: (course: Course) => void;
 }
 
 export default function CoursesCatalogView({
@@ -18,6 +19,7 @@ export default function CoursesCatalogView({
   onViewCourseDetails,
   favorites,
   onToggleWishlist,
+  onShareCourse,
 }: CoursesCatalogViewProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,16 +88,16 @@ export default function CoursesCatalogView({
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-10 px-4" id="catalog-view">
       <div className="w-full max-w-7xl mx-auto space-y-8" id="catalog-wrapper">
         
-        {/* Academic Header Banner */}
+        {/* Header Banner */}
         <div className="bg-white border border-slate-200 p-8 rounded-sm text-left shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6" id="catalog-header-block">
           <div className="space-y-2">
             <h2 className="font-display font-bold text-2xl md:text-3.5xl text-[#0a2540] tracking-tight">
-              Catálogo Completo de Programas
+              Catálogo de Cursos de Informática
             </h2>
             <div className="w-12 h-[3px] bg-[#0d9488]" />
             <p className="text-xs text-slate-500 font-sans leading-relaxed max-w-xl">
-              Pesquise, filtre e explore todas as qualificações técnicas integradas na plataforma. 
-              Consulte tempos de duração e módulos estruturados de alto rendimento.
+              Pesquise, filtre e explore todos os cursos de Informática e Tecnologia do Formador Aldo Valige. 
+              Consulte tempos de duração e módulos práticos estruturados para o seu aprendizado.
             </p>
           </div>
 
@@ -113,7 +115,7 @@ export default function CoursesCatalogView({
             <div className="md:col-span-6 relative" id="catalog-search-col">
               <input
                 type="text"
-                placeholder="Pesquisar por designação de curso, instrutor ou palavras-chave..."
+                placeholder="Pesquisar por designação de curso, formador ou palavras-chave..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-sm text-sm focus:outline-hidden focus:ring-1 focus:ring-[#0d9488] focus:border-[#0d9488]"
@@ -133,7 +135,7 @@ export default function CoursesCatalogView({
               >
                 <option value="all">Filtro: Todos Cursos</option>
                 <option value="free">Somente Grátis</option>
-                <option value="paid">Somente Pagos / Propinas</option>
+                <option value="paid">Somente Pagos</option>
               </select>
             </div>
 
@@ -157,7 +159,7 @@ export default function CoursesCatalogView({
 
           {/* Categories select row scrollbar */}
           <div className="border-t border-slate-100 pt-4" id="catalog-categories-bar">
-            <span className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase block mb-2.5">Filtrar por Especialidade Académica:</span>
+            <span className="text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase block mb-2.5">Filtrar por Área de Informática:</span>
             <div className="flex flex-wrap gap-2" id="catalog-categories-list">
               <button
                 onClick={() => setActiveCategory(null)}
@@ -167,7 +169,7 @@ export default function CoursesCatalogView({
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
                 }`}
               >
-                Todas Especialidades
+                Todas as Áreas
               </button>
               {categories.map((cat) => (
                 <button
@@ -191,7 +193,7 @@ export default function CoursesCatalogView({
         {filteredCourses.length === 0 ? (
           <div className="bg-white border border-slate-200 p-12 text-center rounded-sm space-y-4" id="catalog-empty">
             <BookOpen className="h-10 w-10 text-slate-300 mx-auto" />
-            <h3 className="font-bold text-slate-700 text-sm">Nenhum programa académico corresponde aos critérios de pesquisa</h3>
+            <h3 className="font-bold text-slate-700 text-sm">Nenhum curso corresponde aos critérios de pesquisa</h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               Experimente ajustar o termo de pesquisa ou selecionar outra categoria de filtros no painel interactivo superior.
             </p>
@@ -224,9 +226,22 @@ export default function CoursesCatalogView({
                     type="button"
                     onClick={() => onToggleWishlist(c.id)}
                     className="absolute top-3 right-3 z-10 w-7 h-7 rounded-sm bg-white/90 border border-slate-200 flex items-center justify-center cursor-pointer shadow-3xs text-slate-400 hover:text-rose-600 transition-colors"
+                    title={isFav ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                   >
                     <Heart className={`h-4 w-4 ${isFav ? "fill-rose-600 text-rose-600" : ""}`} />
                   </button>
+
+                  {/* Share course button */}
+                  {onShareCourse && (
+                    <button
+                      type="button"
+                      onClick={() => onShareCourse(c)}
+                      className="absolute top-3 right-11 z-10 w-7 h-7 rounded-sm bg-white/90 border border-slate-200 flex items-center justify-center cursor-pointer shadow-3xs text-slate-500 hover:text-[#0d9488] transition-colors"
+                      title="Partilhar este curso"
+                    >
+                      <Share2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
 
                   {/* Capa do curso */}
                   <div className="w-full aspect-video bg-slate-100 relative overflow-hidden">

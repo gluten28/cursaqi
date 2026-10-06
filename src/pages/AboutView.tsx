@@ -6,16 +6,16 @@ export default function AboutView() {
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-12 px-4" id="about-us-page">
       <div className="w-full max-w-4xl mx-auto space-y-12" id="about-us-container">
 
-        {/* ===== FOUNDER & TUTOR PROFILE — shown FIRST ===== */}
+        {/* ===== FOUNDER & FORMADOR PROFILE — shown FIRST ===== */}
         <div className="bg-white border border-slate-200 rounded-sm overflow-hidden" id="founder-profile-card">
           <div className="bg-[#0a2540] px-8 py-5 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-mono tracking-widest text-[#0d9488] uppercase font-bold block mb-1">Fundador &amp; Tutor Principal</span>
+              <span className="text-[10px] font-mono tracking-widest text-[#0d9488] uppercase font-bold block mb-1">Fundador &amp; Formador Principal</span>
               <h1 className="font-display font-bold text-2xl text-white">Aldo Bonífacio Valige</h1>
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-[10px] bg-[#0d9488]/20 border border-[#0d9488]/30 text-[#0d9488] font-mono font-bold px-3 py-1 rounded-sm uppercase tracking-wider">Desenvolvedor</span>
-              <span className="text-[10px] bg-slate-700 border border-slate-600 text-slate-300 font-mono font-bold px-3 py-1 rounded-sm uppercase tracking-wider">Docente</span>
+              <span className="text-[10px] bg-[#0d9488]/20 border border-[#0d9488]/30 text-[#0d9488] font-mono font-bold px-3 py-1 rounded-sm uppercase tracking-wider">Formador</span>
             </div>
           </div>
 
@@ -41,7 +41,7 @@ export default function AboutView() {
               <div className="space-y-2">
                 <h2 className="font-display font-bold text-base text-[#0a2540]">Perfil Profissional</h2>
                 <p className="text-sm text-slate-600 leading-relaxed font-sans">
-                  Fundador e tutor principal do CURSAQI, com sólida formação académica em <strong>Licenciatura em Ensino de Administração de Sistemas e Redes Informáticas</strong> pelo <em>Instituto Superior Dom Bosco</em>, e formado em <strong>Estatística Sanitária</strong> pelo <em>Instituto Médio Politécnico de Saúde (IMEPS)</em>.
+                  Fundador e formador principal do CURSAQI, com sólida formação académica em <strong>Licenciatura em Ensino de Administração de Sistemas e Redes Informáticas</strong> pelo <em>Instituto Superior Dom Bosco</em>, e formado em <strong>Estatística Sanitária</strong> pelo <em>Instituto Médio Politécnico de Saúde (IMEPS)</em>.
                 </p>
                 <p className="text-sm text-slate-600 leading-relaxed font-sans">
                   Desenvolvedor de sistemas web e desktop experiente, apaixonado por partilhar conhecimento técnico de forma prática e acessível.
@@ -90,16 +90,14 @@ export default function AboutView() {
         {/* ===== ABOUT CURSAQI — shown after the tutor profile ===== */}
         <div className="bg-white border border-slate-200 p-8 text-left rounded-sm space-y-3" id="about-hero-card">
           <span className="text-[10px] bg-[#0d9488]/10 text-[#0d9488] px-3 py-1 rounded-sm uppercase font-mono font-bold tracking-wider">
-            Qualificação Académica Unificada e Integrada
+            Plataforma de Aprendizagem em Informática
           </span>
           <h2 className="font-display font-bold text-3xl md:text-4xl text-[#0a2540] tracking-tight">
             Sobre o CURSAQI
           </h2>
           <div className="w-16 h-[3px] bg-[#0d9488]" />
           <p className="text-sm text-slate-600 leading-relaxed max-w-2xl font-sans mt-3">
-            O CURSAQI é uma plataforma institucional dedicada ao aprimoramento profissional 
-            de alta qualificação e rendimento. Nosso currículo técnico é projetado com rigor 
-            científico para garantir a excelência formativa.
+            O CURSAQI é um espaço criado pelo Formador Aldo Valige para disponibilizar os seus cursos práticos (gratuitos e pagos) na área de Informática, Redes, Sistemas e Programação, para qualquer pessoa que queira aprender e saber das coisas na área de tecnologia.
           </p>
         </div>
 
@@ -111,10 +109,10 @@ export default function AboutView() {
               <BookOpen className="h-6 w-6" />
             </div>
             <h3 className="font-display font-bold text-lg text-[#0a2540]">
-              Pedagogia Baseada em Projetos
+              Aulas Práticas e Diretas
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed font-sans">
-              Nossa abordagem fundamenta-se na aplicabilidade prática dos conceitos teóricos. Desenvolvemos competências por meio da resolução de cenários práticos que capacitam o aluno para os desafios do mercado contemporâneo.
+              O foco das aulas é o aprendizado prático passo a passo. Você aprende conceitos reais de informática, desenvolvimento de software e configuração de sistemas com exercícios e exemplos do dia a dia.
             </p>
           </div>
 
@@ -123,10 +121,10 @@ export default function AboutView() {
               <ShieldCheck className="h-6 w-6" />
             </div>
             <h3 className="font-display font-bold text-lg text-[#0a2540]">
-              Avaliação de Rigor Científico
+              Testes e Quizzes de Fixação
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed font-sans">
-              Todos os módulos pedagógicos são acompanhados de questionários de consolidação ativa. A aprovação exige rendimento mínimo de 80%, forçando o domínio efetivo de cada competência ministrada.
+              Cada módulo conta com perguntas e quizzes interativos para você testar os seus conhecimentos e ter a certeza de que compreendeu a matéria antes de avançar.
             </p>
           </div>
 
@@ -135,10 +133,10 @@ export default function AboutView() {
               <GraduationCap className="h-6 w-6" />
             </div>
             <h3 className="font-display font-bold text-lg text-white">
-              Certificação Unificada
+              Certificado de Conclusão do Curso
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              Os certificados emitidos pelo CURSAQI possuem identificadores de verificação pública exclusivos no banco de dados local. Cada credencial representa a excelência profissional e teórica atingida.
+              Ao concluir todas as aulas e atingir a pontuação necessária no teste final, o aluno tem direito a um certificado de conclusão comprovando que completou o curso com sucesso.
             </p>
           </div>
 
@@ -147,10 +145,10 @@ export default function AboutView() {
               <Award className="h-6 w-6" />
             </div>
             <h3 className="font-display font-bold text-lg text-[#0a2540]">
-              Qualificação Contínua
+              Cursos Gratuitos e Pagos
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed font-sans">
-              Através do plano Premium, disponibilizamos materiais didáticos adicionais e exclusivos que complementam as aulas. O suporte de tutores qualificados auxilia na eliminação de barreiras cognitivas durante os estudos.
+              A plataforma disponibiliza cursos gratuitos acessíveis a todos, além de cursos completos pagos com conteúdos aprofundados e materiais didáticos para descarregar.
             </p>
           </div>
 
@@ -160,9 +158,9 @@ export default function AboutView() {
         <div className="bg-white border border-slate-200 rounded-sm p-8 text-left space-y-6" id="about-stats-info">
           <div className="border-b border-slate-100 pb-4">
             <h3 className="font-display font-bold text-xl text-[#0a2540]">
-              Infraestrutura Educativa Unificada
+              Estrutura dos Cursos
             </h3>
-            <p className="text-xs text-slate-400 font-sans mt-1">Estatísticas de progresso acumulado na plataforma</p>
+            <p className="text-xs text-slate-400 font-sans mt-1">Estatísticas de cursos e conteúdos na plataforma</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6" id="about-stats-panel">
@@ -172,7 +170,7 @@ export default function AboutView() {
             </div>
             <div className="space-y-1">
               <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0%</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider">Média de Aprovação</div>
+              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider">Média de Aproveitamento</div>
             </div>
             <div className="space-y-1">
               <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0</div>
@@ -180,15 +178,15 @@ export default function AboutView() {
             </div>
             <div className="space-y-1">
               <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider font-semibold">Tópicos Técnicos</div>
+              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider font-semibold">Tópicos de Informática</div>
             </div>
           </div>
         </div>
 
         {/* Corporate contact information block footer */}
         <div className="border-t border-slate-200 pt-6 text-center text-[11px] text-slate-400 font-sans space-y-1" id="about-regulatory-info">
-          <div>CURSAQI INOVAÇÃO E QUALIFICAÇÃO ACADÉMICA - REGULADO SOB PORTARIA ACADÉMICA</div>
-          <div>Para dúvidas institucionais, entre em contato via whatsapp de suporte no seu painel de perfil.</div>
+          <div>CURSAQI // PLATAFORMA DE CURSOS DE INFORMÁTICA DO FORMADOR ALDO VALIGE</div>
+          <div>Para dúvidas sobre os cursos ou suporte, entre em contacto via WhatsApp ou e-mail.</div>
         </div>
 
       </div>

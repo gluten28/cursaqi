@@ -1,7 +1,8 @@
-import React from "react";
-import { ArrowLeft, Clock, PlayCircle, BookOpen, User, ShieldCheck, Lock, CheckCircle, Download, FileText, FileCode, AlertTriangle, Award } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, Clock, PlayCircle, BookOpen, User, ShieldCheck, Lock, CheckCircle, Download, FileText, FileCode, AlertTriangle, Award, Share2, Copy, Check } from "lucide-react";
 
 import { Course, CourseVideo, UserProfile, DidacticMaterial, PaymentTicket } from "../types";
+import { copyToClipboard, getFullShareUrl } from "../utils/shareUtils";
 
 interface CourseDetailViewProps {
   course: Course;
@@ -16,6 +17,7 @@ interface CourseDetailViewProps {
   materials: DidacticMaterial[];
   paymentTickets?: PaymentTicket[];
   onBuy?: (course: Course) => void;
+  onShare?: (course: Course) => void;
 }
 
 export default function CourseDetailView({
@@ -31,7 +33,21 @@ export default function CourseDetailView({
   materials,
   paymentTickets = [],
   onBuy,
+  onShare,
 }: CourseDetailViewProps) {
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = async () => {
+    const url = getFullShareUrl(course.id);
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopiedLink(true);
+      if (onTriggerNotification) {
+        onTriggerNotification("com_energia", "Ligação Copiada!", "O link deste curso foi copiado para a área de transferência.");
+      }
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
   const courseVideos = videos.filter((v) => v.courseId === course.id);
 
   // Access control for materials:
@@ -45,15 +61,46 @@ export default function CourseDetailView({
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-8 px-4 text-left" id="course-details-page">
       <div className="w-full max-w-5xl mx-auto space-y-8" id="course-details-wrapper">
         
-        {/* Navigation Action link */}
-        <button
-          onClick={onGoBack}
-          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-850 cursor-pointer transition-colors"
-          id="course-details-back-btn"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Voltar para Lista de Cursos</span>
-        </button>
+        {/* Navigation Action link & Social Share */}
+        <div className="flex flex-wrap items-center justify-between gap-4" id="course-details-nav-row">
+          <button
+            onClick={onGoBack}
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-800 cursor-pointer transition-colors"
+            id="course-details-back-btn"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Voltar para Lista de Cursos</span>
+          </button>
+
+          {/* Social Share & Copy Link Actions */}
+          <div className="flex items-center gap-2" id="course-share-actions-top">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-sm border transition-all cursor-pointer ${
+                copiedLink
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900 shadow-2xs"
+              }`}
+              title="Copiar ligação do curso"
+            >
+              {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+              <span>{copiedLink ? "Link Copiado!" : "Copiar Link"}</span>
+            </button>
+
+            {onShare && (
+              <button
+                type="button"
+                onClick={() => onShare(course)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider rounded-sm bg-[#0a2540] hover:bg-[#0d9488] text-white transition-colors cursor-pointer shadow-2xs"
+                title="Partilhar curso nas redes sociais"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                <span>Partilhar</span>
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Hero Course Presentation Card */}
         <div className="bg-white border border-slate-200 rounded-sm overflow-hidden flex flex-col md:flex-row items-stretch" id="course-jumbotron-wrapper">
@@ -93,7 +140,7 @@ export default function CourseDetailView({
               <div className="flex flex-wrap gap-4 text-slate-500 text-xs font-sans mt-2">
                 <div className="flex items-center gap-1.5">
                   <User className="h-4 w-4 text-slate-400 shrink-0" />
-                  <span>Docente: <strong className="text-slate-700 font-bold">{course.instructorName}</strong></span>
+                  <span>Formador: <strong className="text-slate-700 font-bold">{course.instructorName}</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5 border-l border-slate-200 pl-4">
                   <Clock className="h-4 w-4 text-slate-400 shrink-0" />
@@ -105,7 +152,7 @@ export default function CourseDetailView({
             {/* Dynamic CTAs block depending on enrollment status */}
             <div className="pt-6 mt-6 border-t border-slate-150 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4" id="course-cta-region">
               <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block mb-0.5">Propina de Inscrição</span>
+                <span className="text-[10px] uppercase font-mono font-bold text-slate-400 block mb-0.5">Valor do Curso</span>
                 <span className="text-xl font-mono font-black text-slate-900 leading-none">
                   {isPaidCourse ? `${course.price.toLocaleString("pt-PT")} MT` : "GRATUITO"}
                 </span>
@@ -195,8 +242,8 @@ export default function CourseDetailView({
                 Descrição Detalhada do Curso
               </h3>
               <p className="text-sm text-slate-600 leading-relaxed font-sans font-normal whitespace-pre-line">
-                {course.description || "Este programa acadêmico oferece ferramentas consolidadas e exercícios reflexivos contínuos para sedimentar o conhecimento tecnológico e analítico necessário na área corporativa atual."}
-                {"\n\nNossos palestrantes ensinam passo-a-passo os cenários práticos da indústria para consolidar a sua qualificação técnica."}
+                {course.description || "Este curso oferece ferramentas práticas, explicações diretas e exercícios passo a passo para dominar a informática e a tecnologia com o Formador Aldo Valige."}
+                {"\n\nAprenda na prática com cenários reais para consolidar o seu conhecimento prático em informática."}
               </p>
 
               {/* Skills covered pills */}
@@ -355,11 +402,11 @@ export default function CourseDetailView({
               )}
             </div>
 
-            {/* Academic regulations metadata */}
+            {/* Pedagógico regulations metadata */}
             <div className="bg-white border border-slate-200 p-6 rounded-sm text-xs text-slate-500 space-y-3" id="didactic-regulations">
-              <h4 className="font-mono font-bold uppercase tracking-wider text-[#0a2540] text-[10px]">Apoio Pedagógico ao Aluno</h4>
+              <h4 className="font-mono font-bold uppercase tracking-wider text-[#0a2540] text-[10px]">Apoio ao Estudante</h4>
               <p className="font-sans leading-normal text-[11px] text-slate-400">
-                Se possuir dificuldades no escoamento do conteúdo ou na interpretação das sebentas teóricas, use os canais de contacto Whatsapp do orientador {course.instructorName} para auxílio imediato.
+                Se possuir dificuldades no escoamento do conteúdo ou na interpretação das aulas teóricas, use os canais de contacto Whatsapp do formador {course.instructorName} para auxílio imediato.
               </p>
             </div>
 
@@ -370,7 +417,7 @@ export default function CourseDetailView({
                 Direito a Certificado Físico
               </h4>
               <p className="font-sans leading-normal text-[11px] text-slate-600">
-                Ao concluir com sucesso todas as lições deste curso e obter aprovação no Exame Final (aproveitamento mínimo de 80%), você terá direito a receber o seu <strong>certificado de conclusão físico oficial</strong>. O documento será enviado de forma inteiramente gratuita para a morada registada na sua conta de estudante.
+                Ao concluir com sucesso todas as lições deste curso e obter aprovação no Exame Final (aproveitamento mínimo de 80%), você terá direito a receber o seu <strong>certificado de conclusão físico</strong> do curso ministrado pelo Formador Aldo Valige. O documento será enviado para a morada registada na sua conta.
               </p>
             </div>
 

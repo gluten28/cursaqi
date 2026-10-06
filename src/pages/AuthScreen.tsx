@@ -344,7 +344,7 @@ export default function AuthScreen({
                 className="w-full inline-flex items-center justify-center gap-2 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider py-3 px-6 rounded-sm transition-colors cursor-pointer disabled:opacity-50"
                 id="signup-btn-action"
               >
-                <span>{loading ? "Processando..." : "Criar Conta Académica"}</span>
+                <span>{loading ? "Processando..." : "Criar Minha Conta"}</span>
                 <UserPlus className="h-4 w-4" />
               </button>
 
@@ -379,7 +379,7 @@ export default function AuthScreen({
         {/* Informational security check block footer */}
         <div className="bg-slate-50/50 border-t border-slate-100 text-center text-[10px] font-mono text-slate-400 flex items-center justify-center gap-1.5" style={{ padding: "16px" }} id="auth-compliance-footer">
           <ShieldCheck className="h-4 w-4 text-[#0d9488]" />
-          <span>PORTAL DE REGISTO ACADÉMICO</span>
+          <span>PLATAFORMA DE CURSOS // FORMAÇÃO ALDO VALIGE</span>
         </div>
       </div>
     </div>

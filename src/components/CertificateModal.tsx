@@ -20,7 +20,7 @@ export default function CertificateModal({
   certificateId,
   onClose,
 }: CertificateModalProps) {
-  const workload = course.lessonsCount * 3; // Estimated academic hours
+  const workload = course.lessonsCount * 3; // Estimated course hours
 
   const handlePrint = () => {
     window.print();
@@ -50,7 +50,7 @@ export default function CertificateModal({
           <div className="space-y-1">
             <span className="font-extrabold text-slate-950 uppercase tracking-widest text-[10px] block">Aviso de Isenção Regulamentar</span>
             <p className="text-slate-600 text-[11px]">
-              <strong>Nota Importante:</strong> O certificado disponibilizado abaixo destina-se unicamente a fins de demonstração académica e prática de aproveitamento curricular simulado. <strong>Estes certificados não possuem caráter oficial</strong>, não são homologados pelo Ministério da Educação, e <strong>não possuem certificação profissional reconhecida junto a nenhuma entidade reguladora, ordem profissional ou autoridade pública competente</strong>.
+              <strong>Nota Importante:</strong> O certificado disponibilizado abaixo destina-se unicamente a fins de reconhecimento de conclusão de curso livre de informática ministrado pelo Formador Aldo Valige. <strong>Este certificado não concede grau acadêmico nem qualificação profissional regulamentada</strong>, sendo um comprovativo prático de frequência e aproveitamento nos conteúdos lecionados na plataforma CUrsaQi.
             </p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function CertificateModal({
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#0d9488]" />
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">
-              Certificado Verificado Academicamente // ID: {certificateId}
+              Certificado de Conclusão de Curso // ID: {certificateId}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -110,11 +110,11 @@ export default function CertificateModal({
                   C
                 </span>
                 <span className="font-display text-base font-bold tracking-widest text-[#0a2540] uppercase">
-                  CURSAQI ACADEMIA DE ENSINO
+                  CURSAQI • FORMAÇÃO EM INFORMÁTICA
                 </span>
               </div>
               <div className="text-[10px] font-mono tracking-widest text-[#0d9488] font-bold uppercase">
-                CERTIFICADO DE PROGRESSO & CONCLUSÃO ACADÉMICA
+                CERTIFICADO DE CONCLUSÃO DE CURSO LIVRE
               </div>
               <div className="w-16 h-[2px] bg-[#0d9488] mx-auto mt-2" />
             </div>
@@ -122,7 +122,7 @@ export default function CertificateModal({
             {/* Central credential statement */}
             <div className="my-6 space-y-4">
               <p className="font-serif italic text-xs text-slate-500">
-                Certificamos, para efeitos de aproveitamento e registo pedagógico interno, que o(a) estudante
+                Certificamos, para fins de comprovação de estudo e conclusão de curso livre, que o(a) estudante
               </p>
               
               <h3 className="font-display text-2xl md:text-3xl font-extrabold text-[#0a2540] tracking-tight py-1 border-b border-slate-100 max-w-md mx-auto">
@@ -130,7 +130,7 @@ export default function CertificateModal({
               </h3>
 
               <p className="font-serif italic text-xs text-slate-500 leading-relaxed max-w-lg mx-auto">
-                concluiu de forma regulamentar todas as aulas virtuais teórico-práticas do curso livre de formação de especialização profissional pedagógica e obteve aproveitamento em avaliação estruturada:
+                concluiu com êxito todas as aulas do curso prático de Informática ministrado pelo Formador Aldo Valige na plataforma CUrsaQi, obtendo aproveitamento na avaliação final:
               </p>
 
               <h4 className="font-display text-lg md:text-xl font-bold text-[#0d9488] tracking-tight uppercase">
@@ -162,7 +162,7 @@ export default function CertificateModal({
 
               {/* Physical Monochromatic Signature Stamp Seal */}
               <div className="col-span-4 flex flex-col items-center justify-center">
-                {/* SVG Artistic Signature representation for "Director Academico" */}
+                {/* SVG Artistic Signature representation for Formador Aldo Valige */}
                 <div className="w-32 h-10 relative flex items-center justify-center border-b border-slate-300">
                   <svg viewBox="0 0 100 30" className="w-full h-full text-slate-700 opacity-90">
                     {/* Draw manual-like elegant continuous path signature stroke lines */}
@@ -178,8 +178,8 @@ export default function CertificateModal({
                     ASSINADO
                   </span>
                 </div>
-                <div className="text-[8px] uppercase tracking-wider font-mono text-slate-400 font-bold mt-1.5">
-                  Direcção Pedagógica CUrsaQi
+                <div className="text-[8px] uppercase tracking-wider font-mono text-slate-500 font-bold mt-1.5">
+                  Formador Aldo Valige
                 </div>
               </div>
 

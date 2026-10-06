@@ -290,7 +290,7 @@ export default function PurchaseModal({
                 <div className="sm:col-span-2 pt-2 border-t border-slate-200 mt-2 flex justify-between">
                   <div>
                     <span className="text-[9px] text-slate-400 font-mono block">
-                      {course.id === "PREMIUM_SUBSCRIPTION" ? "Plano Selecionado" : "Programa Académico"}
+                      {course.id === "PREMIUM_SUBSCRIPTION" ? "Plano Selecionado" : "Curso Selecionado"}
                     </span>
                     <span className="font-bold text-slate-700">{course.title}</span>
                   </div>

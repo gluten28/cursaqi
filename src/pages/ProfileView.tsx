@@ -266,7 +266,7 @@ export default function ProfileView({
                     </span>
                     <h3 className="font-display font-bold text-base text-[#0a2540] mt-2">Apoio & Acesso Premium</h3>
                     <p className="text-[11px] text-slate-550 font-sans leading-relaxed mt-0.5">
-                      Subscreva o plano pago para desbloquear a qualificação profissional avançada e materiais extras de estudo.
+                      Subscreva o plano pago para desbloquear acesso a todos os cursos de informática, suporte direto e materiais extras de estudo.
                     </p>
                   </div>
 

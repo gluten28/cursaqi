@@ -1,0 +1,18 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /?view=courses
+Allow: /?view=about
+Allow: /?course=*
+
+# Block private & administrative zones
+Disallow: /admin
+Disallow: /api/
+Disallow: /?view=admin
+Disallow: /?view=profile
+Disallow: /?view=payments
+Disallow: /?view=history
+Disallow: /?view=certificates
+
+# Sitemap reference
+Sitemap: https://cursaqi.com/sitemap.xml
