@@ -63,7 +63,8 @@ import {
   dbGetPaymentTickets,
   dbUpdateTicketStatus,
   dbSavePaymentMethod,
-  dbCheckAndExpirePremium
+  dbCheckAndExpirePremium,
+  seedCatalogIfMissing
 } from "./supabase";
 import { initialCourses, initialCategories, initialVideos, initialQuizzes, initialMaterials, initialBanners, initialUsers } from "./data";
 import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, UserProgress, PlatformNotification, DidacticMaterial, PaymentMethod, PaymentTicket, PREMIUM_SUBSCRIPTION_ID, PREMIUM_SUBSCRIPTION_PRICE, PREMIUM_SUBSCRIPTION_DAYS } from "./types";
@@ -222,6 +223,7 @@ export default function App() {
       try {
         // Ensure DB has tables seeded if empty
         await seedDatabaseIfEmpty();
+        await seedCatalogIfMissing();
 
         // Fetch all values from Supabase DB (except users)
         const [dbCats, dbCourses, dbVids, dbQuizzes, dbBans, dbMethods, dbMats] = await Promise.all([

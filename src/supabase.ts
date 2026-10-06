@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, PlatformNotification, DidacticMaterial, PaymentMethod, PaymentTicket, PaymentNotification, PaymentLog, ExamAttempt, ChatMessage, ChatCategory } from "./types";
-import { initialCategories, initialCourses, initialVideos, initialQuizzes, initialBanners, initialUsers } from "./data";
+import { initialCategories, initialCourses, initialVideos, initialQuizzes, initialBanners, initialUsers, catalogSeedCategories, catalogSeedCourses } from "./data";
 
 
 // @ts-ignore
@@ -222,6 +222,41 @@ export async function seedDatabaseIfEmpty() {
     }
   } catch (err) {
     console.error("Failed to seed database with test accounts:", err);
+  }
+}
+
+/**
+ * Garante que os cursos base do catálogo existam no Supabase sem substituir
+ * cursos já publicados ou alterações feitas pelo administrador.
+ */
+export async function seedCatalogIfMissing() {
+  try {
+    const [{ data: existingCourses, error: coursesError }, { data: existingCategories, error: categoriesError }] = await Promise.all([
+      supabase.from("courses").select("id"),
+      supabase.from("categories").select("id"),
+    ]);
+
+    if (coursesError || categoriesError) {
+      console.warn("Could not inspect catalog before seeding:", coursesError?.message || categoriesError?.message);
+      return;
+    }
+
+    const courseIds = new Set((existingCourses || []).map((row) => row.id));
+    const categoryIds = new Set((existingCategories || []).map((row) => row.id));
+    const missingCategories = catalogSeedCategories.filter((category) => !categoryIds.has(category.id));
+    const missingCourses = catalogSeedCourses.filter((course) => !courseIds.has(course.id));
+
+    if (missingCategories.length > 0) {
+      const { error } = await supabase.from("categories").insert(missingCategories.map(mapCategoryToDB));
+      if (error) console.warn("Could not seed catalog categories:", error.message);
+    }
+
+    if (missingCourses.length > 0) {
+      const { error } = await supabase.from("courses").insert(missingCourses.map(mapCourseToDB));
+      if (error) console.warn("Could not seed catalog courses:", error.message);
+    }
+  } catch (error) {
+    console.warn("Could not seed catalog:", error);
   }
 }
 

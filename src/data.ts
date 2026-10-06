@@ -122,6 +122,71 @@ export const initialCourses: Course[] = [
   },
 ];
 
+// Cursos-base do catálogo CursaQi. O seed do Supabase usa estes registros
+// somente quando ainda não existem, preservando alterações feitas no painel.
+export const catalogSeedCategories: Category[] = [
+  {
+    id: "informática",
+    name: "Informática",
+    iconName: "Cpu",
+    count: 0,
+  },
+];
+
+export const catalogSeedCourses: Course[] = [
+  {
+    id: "course-informatica-basica",
+    title: "Informática Básica",
+    category: "informática",
+    tag: "INFORMÁTICA",
+    lessonsCount: 0,
+    price: 0,
+    instructorName: "Aldo Valige",
+    instructorTitle: "Formador de Informática",
+    instructorAvatar: "AV",
+    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop",
+    description: "Aprenda os fundamentos para utilizar o computador com segurança e autonomia. O percurso aborda a organização de ficheiros e pastas, utilização do sistema operativo, navegação na internet, e-mail, segurança digital e boas práticas para o dia a dia.",
+    enrolledStudentsCount: 0,
+    rating: 0,
+    skillsCovered: ["Computador e Sistema Operativo", "Ficheiros e Pastas", "Internet e E-mail", "Segurança Digital"],
+    isFeatured: true,
+  },
+  {
+    id: "course-excel-pratico",
+    title: "Excel Prático: do Básico aos Relatórios",
+    category: "informática",
+    tag: "EXCEL",
+    lessonsCount: 0,
+    price: 0,
+    instructorName: "Aldo Valige",
+    instructorTitle: "Formador de Informática",
+    instructorAvatar: "AV",
+    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=600&auto=format&fit=crop",
+    description: "Desenvolva competências práticas no Microsoft Excel para organizar dados, criar fórmulas, controlar despesas e apresentar resultados. O curso foi pensado para iniciantes e para quem deseja aplicar planilhas no trabalho ou nos estudos.",
+    enrolledStudentsCount: 0,
+    rating: 0,
+    skillsCovered: ["Planilhas e Formatação", "Fórmulas Básicas", "Funções Essenciais", "Gráficos e Relatórios"],
+    isFeatured: true,
+  },
+  {
+    id: "course-word-pratico",
+    title: "Word Prático: Documentos Profissionais",
+    category: "informática",
+    tag: "WORD",
+    lessonsCount: 0,
+    price: 0,
+    instructorName: "Aldo Valige",
+    instructorTitle: "Formador de Informática",
+    instructorAvatar: "AV",
+    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=600&auto=format&fit=crop",
+    description: "Aprenda a criar e formatar documentos profissionais no Microsoft Word. Pratique a elaboração de cartas, currículos, relatórios, tabelas e documentos prontos para imprimir ou exportar em PDF.",
+    enrolledStudentsCount: 0,
+    rating: 0,
+    skillsCovered: ["Formatação de Texto", "Tabelas e Imagens", "Currículos e Relatórios", "PDF e Impressão"],
+    isFeatured: true,
+  },
+];
+
 export const initialVideos: CourseVideo[] = [
   {
     id: "vid-1",
