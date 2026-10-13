@@ -146,7 +146,8 @@ export function mapBannerToJS(row: any): PromoBanner {
     buttonText: row.button_text || "",
     isActive: !!row.is_active,
     imageUrl: row.image_url || undefined,
-    courseId: row.course_id || undefined
+    courseId: row.course_id || undefined,
+    linkUrl: row.link_url || row.url || undefined
   };
 }
 
@@ -158,7 +159,8 @@ export function mapBannerToDB(b: PromoBanner) {
     button_text: b.buttonText || "",
     is_active: !!b.isActive,
     image_url: b.imageUrl || null,
-    course_id: b.courseId || null
+    course_id: b.courseId || null,
+    link_url: b.linkUrl || null
   };
 }
 
@@ -173,6 +175,7 @@ export function mapUserToJS(row: any): UserProfile {
     role: row.role === "admin" ? "admin" : "user",
     enrolledCourseProgress: Array.isArray(row.enrolled_course_progress) ? row.enrolled_course_progress : [],
     favorites: Array.isArray(row.favorites) ? row.favorites : [],
+    avatarUrl: row.avatar_url || row.avatarUrl || undefined,
     planType: row.plan_type === "pago" ? "pago" : "gratuito",
     premiumActivatedAt: row.premium_activated_at || undefined,
     premiumExpiresAt: row.premium_expires_at || undefined,
@@ -191,6 +194,7 @@ export function mapUserToDB(u: UserProfile) {
     role: u.role,
     enrolled_course_progress: u.enrolledCourseProgress,
     favorites: u.favorites,
+    avatar_url: u.avatarUrl || null,
     plan_type: u.planType || "gratuito",
     premium_activated_at: u.premiumActivatedAt || null,
     premium_expires_at: u.premiumExpiresAt || null,
@@ -492,8 +496,14 @@ export async function dbSaveBanner(banner: PromoBanner): Promise<boolean> {
   const dbData = mapBannerToDB(banner);
   const { error } = await supabase.from("promo_banners").upsert(dbData);
   if (error) {
-    console.error("Error saving banner:", error);
-    return false;
+    console.warn("First upsert banner failed, attempting fallback without link_url:", error);
+    // Fallback if link_url column is not yet migrated in Supabase table
+    const { link_url, ...fallbackData } = dbData as any;
+    const fallbackRes = await supabase.from("promo_banners").upsert(fallbackData);
+    if (fallbackRes.error) {
+      console.error("Error saving banner:", fallbackRes.error);
+      return false;
+    }
   }
   return true;
 }
@@ -1104,6 +1114,55 @@ export async function dbUploadBannerImage(file: File): Promise<string | null> {
   return signedData?.signedUrl || null;
 }
 
+export async function dbUploadUserAvatar(file: File, userId: string): Promise<string | null> {
+  const rawExt = file.name.split('.').pop() || 'png';
+  const fileExt = rawExt.replace(/[^a-zA-Z0-9]/g, "").substring(0, 5).toLowerCase();
+  const cleanName = `avatar_${userId}_${Date.now()}.${fileExt}`;
+  const filePath = `avatars/${cleanName}`;
+
+  // Try 'avatars' bucket first
+  let uploadResult = await supabase.storage
+    .from('avatars')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+
+  let targetBucket = 'avatars';
+
+  // Fallback to 'payment-receipts' bucket if 'avatars' bucket not created yet
+  if (uploadResult.error) {
+    console.warn("Upload no bucket avatars falhou, tentando fallback:", uploadResult.error.message);
+    targetBucket = 'payment-receipts';
+    uploadResult = await supabase.storage
+      .from('payment-receipts')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+  }
+
+  if (uploadResult.error) {
+    console.error("Erro no upload do avatar:", uploadResult.error.message);
+    return null;
+  }
+
+  // Get public URL
+  const { data: publicUrlData } = supabase.storage
+    .from(targetBucket)
+    .getPublicUrl(filePath);
+
+  if (publicUrlData?.publicUrl) {
+    return publicUrlData.publicUrl;
+  }
+
+  const { data: signedData } = await supabase.storage
+    .from(targetBucket)
+    .createSignedUrl(filePath, 315360000); // 10 years
+
+  return signedData?.signedUrl || null;
+}
+
 // --- COMMUNITY & SUPPORT CHAT MAPPING & API ---
 
 export function mapChatMessageToJS(row: any): ChatMessage {
@@ -1115,7 +1174,7 @@ export function mapChatMessageToJS(row: any): ChatMessage {
       ? row.author_role 
       : "aluno") as ChatMessage["authorRole"],
     message: String(row.message || ""),
-    category: (["ideia", "pergunta", "sugestao", "ajuda", "geral"].includes(row.category)
+    category: (["ideia", "pergunta", "sugestao", "ajuda", "geral", "suporte"].includes(row.category)
       ? row.category
       : "geral") as ChatCategory,
     createdAt: row.created_at || new Date().toISOString()

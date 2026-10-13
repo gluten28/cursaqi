@@ -31,15 +31,26 @@ export default function CertificatesView({
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-10 px-4" id="certificates-view-tab">
       <div className="w-full max-w-5xl mx-auto space-y-6">
         
+        {/* Regulatory Notice Banner */}
+        <div className="bg-amber-50 border border-amber-200 text-amber-950 p-4 rounded-xl text-left text-xs leading-relaxed flex items-start gap-3 shadow-2xs" id="cert-view-disclaimer">
+          <ShieldAlert className="h-5 w-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold uppercase tracking-wider text-[11px] block text-amber-950">Aviso Regulamentar • Finalidade do Certificado</span>
+            <p className="text-amber-900 text-xs">
+              Os certificados emitidos pela CUrsaQi são <strong>somente de participação na plataforma</strong> e comprovação de frequência nos cursos práticos livres do Formador Aldo Valige. <strong>Não concedem habilitação acadêmica e NÃO podem ser usados como anexo em concursos de vaga de emprego</strong> ou processos seletivos públicos regulamentados.
+            </p>
+          </div>
+        </div>
+
         {/* Info Banner about Physical Certificate */}
-        <div className="bg-[#0a2540] text-white p-6 rounded-sm text-left shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6" id="physical-cert-promo-banner">
+        <div className="bg-[#0a2540] text-white p-6 rounded-xl text-left shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6" id="physical-cert-promo-banner">
           <div className="space-y-2 max-w-2xl">
             <h3 className="font-display font-bold text-lg md:text-xl text-[#0d9488] tracking-tight flex items-center gap-2">
               <Award className="h-6 w-6 text-[#0d9488]" />
               Direito a Certificado de Participação Físico
             </h3>
             <p className="text-xs text-slate-350 leading-relaxed font-sans">
-              Sabia? Na nossa plataforma, além do seu certificado digital instantâneo, no final de cada curso concluído você terá direito a um <strong>certificado de participação físico oficial</strong>, impresso em papel timbrado institucional de alta gramatura e assinado pela Direcção Pedagógica.
+              Na nossa plataforma, além do seu certificado digital instantâneo, no final de cada curso concluído você terá direito a um <strong>certificado de participação físico na plataforma</strong>, impresso em papel timbrado institucional de alta gramatura e assinado pela Direção Pedagógica (documento exclusivo de participação na plataforma; não utilizável como anexo em concursos de vaga de emprego).
             </p>
             <p className="text-[11px] text-slate-400 font-sans flex items-center gap-1.5 mt-2">
               <MapPin className="h-3.5 w-3.5 text-[#0d9488] shrink-0" />

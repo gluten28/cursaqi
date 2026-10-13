@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Plus, Edit3, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, RotateCcw, BookOpen, Settings, Tag, Film, Users, Megaphone, Save, DollarSign, Loader2, HelpCircle, FileText, Download } from "lucide-react";
-import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, PaymentMethod, PaymentTicket, DidacticMaterial } from "../../types";
+import React, { useState, useEffect } from "react";
+import { Plus, Edit3, Trash2, CheckCircle2, AlertTriangle, ArrowLeft, RotateCcw, BookOpen, Settings, Tag, Film, Users, Megaphone, Save, DollarSign, Loader2, HelpCircle, FileText, Download, Headphones, MessageCircle, Send, Search, ChevronDown, ChevronRight, ShieldCheck } from "lucide-react";
+import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, PaymentMethod, PaymentTicket, DidacticMaterial, ChatMessage } from "../../types";
 import { extractWistiaId } from "../../utils/videoUtils";
 import AdminFinanceView from "./AdminFinanceView";
-import { dbUploadBannerImage } from "../../supabase";
+import { dbUploadBannerImage, dbGetChatMessages, dbSendChatMessage, dbSubscribeToChat } from "../../supabase";
 
 interface AdminPanelProps {
   courses: Course[];
@@ -40,7 +40,7 @@ interface AdminPanelProps {
   currentUser: UserProfile;
 }
 
-type AdminTab = "courses" | "categories" | "videos" | "quizzes" | "materials" | "banners" | "users" | "finance";
+type AdminTab = "courses" | "categories" | "videos" | "quizzes" | "materials" | "banners" | "users" | "finance" | "support";
 
 export default function AdminPanel({
   courses,
@@ -148,14 +148,72 @@ export default function AdminPanel({
         setVideoValid(true);
 
     } else {
-
         setVideoPreviewId("");
-
         setVideoValid(false);
-
     }
+  };
 
-};
+  // --- VIDEO LIST COURSE GROUPING & SEARCH ---
+  const [selectedCourseVideoFilter, setSelectedCourseVideoFilter] = useState<string>("ALL");
+  const [videoSearchQuery, setVideoSearchQuery] = useState("");
+
+  // --- SUPPORT MESSAGES STATE ---
+  const [supportMessages, setSupportMessages] = useState<ChatMessage[]>([]);
+  const [replyText, setReplyText] = useState("");
+  const [replyingToMessageId, setReplyingToMessageId] = useState<string | null>(null);
+  const [isSendingReply, setIsSendingReply] = useState(false);
+
+  useEffect(() => {
+    async function loadSupport() {
+      try {
+        const allMsgs = await dbGetChatMessages();
+        setSupportMessages(allMsgs.filter(m => m.category === "suporte"));
+      } catch (e) {
+        console.error("Erro ao carregar mensagens de suporte no admin:", e);
+      }
+    }
+    loadSupport();
+
+    const unsub = dbSubscribeToChat((newM) => {
+      if (newM.category === "suporte") {
+        setSupportMessages((prev) => {
+          if (prev.some(m => m.id === newM.id)) return prev;
+          return [...prev, newM];
+        });
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
+  const handleSendSupportReply = async (originalMsg?: ChatMessage) => {
+    if (!replyText.trim() || isSendingReply) return;
+    setIsSendingReply(true);
+    try {
+      const authorName = currentUser?.fullName || "Formador Aldo Valige (Admin)";
+      const prefix = originalMsg ? `@${originalMsg.authorName}: ` : "";
+      const created = await dbSendChatMessage({
+        userId: currentUser?.id,
+        authorName: authorName,
+        authorRole: "formador",
+        message: prefix + replyText.trim(),
+        category: "suporte"
+      });
+      if (created) {
+        setSupportMessages((prev) => {
+          if (prev.some(m => m.id === created.id)) return prev;
+          return [...prev, created];
+        });
+        setReplyText("");
+        setReplyingToMessageId(null);
+        triggerAlert("success", "Resposta de suporte enviada com sucesso.");
+      }
+    } catch (e) {
+      triggerAlert("error", "Erro ao responder mensagem de suporte.");
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
 
   // --- QUIZ FORM STATE ---
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
@@ -299,6 +357,7 @@ export default function AdminPanel({
   const [bannerImageFile, setBannerImageFile] = useState<File | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [bannerCourseId, setBannerCourseId] = useState<string>("");
+  const [bannerLinkUrl, setBannerLinkUrl] = useState<string>("");
 
   // --- STUDENTS FORM STATE (ADMIN CAN EDIT FREE FORM) ---
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -444,16 +503,16 @@ export default function AdminPanel({
       handleVideoReset();
   };
 
-  // BANNER ACTIONS
+  // ANÚNCIOS / BANNER ACTIONS
   const handleBannerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bannerTitle.trim()) {
-      triggerAlert("error", "Preencha o título da promoção.");
+      triggerAlert("error", "Preencha o título do anúncio.");
       return;
     }
 
     if (!editingBannerId && !bannerImageFile) {
-      triggerAlert("error", "Por favor, carregue uma imagem para o banner.");
+      triggerAlert("error", "Por favor, carregue uma imagem para o anúncio.");
       return;
     }
 
@@ -464,7 +523,7 @@ export default function AdminPanel({
       if (bannerImageFile) {
         const uploadedUrl = await dbUploadBannerImage(bannerImageFile);
         if (!uploadedUrl) {
-          triggerAlert("error", "Erro ao fazer upload da imagem do banner.");
+          triggerAlert("error", "Erro ao fazer upload da imagem do anúncio.");
           setUploadingBanner(false);
           return;
         }
@@ -472,21 +531,22 @@ export default function AdminPanel({
       }
 
       const item: PromoBanner = {
-        id: editingBannerId || `banner-${Date.now()}`,
+        id: editingBannerId || `ad-${Date.now()}`,
         title: bannerTitle.trim(),
         subtitle: bannerSubtitle.trim(),
-        buttonText: bannerButtonText.trim() || "Ver Curso",
+        buttonText: bannerButtonText.trim() || "Saber Mais",
         isActive: bannerIsActive,
         imageUrl: finalImageUrl,
         courseId: bannerCourseId || undefined,
+        linkUrl: bannerLinkUrl.trim() || undefined,
       };
 
       if (editingBannerId) {
         onUpdateBanner(item);
-        triggerAlert("success", "Banner de publicidade atualizado.");
+        triggerAlert("success", "Anúncio atualizado com sucesso.");
       } else {
         onAddBanner(item);
-        triggerAlert("success", "Novo banner promocional publicado com sucesso.");
+        triggerAlert("success", "Novo anúncio publicado com sucesso.");
       }
       
       // Reset form
@@ -498,9 +558,10 @@ export default function AdminPanel({
       setBannerImageUrl("");
       setBannerImageFile(null);
       setBannerCourseId("");
+      setBannerLinkUrl("");
     } catch (err) {
       console.error(err);
-      triggerAlert("error", "Ocorreu um erro ao salvar o banner.");
+      triggerAlert("error", "Ocorreu um erro ao salvar o anúncio.");
     } finally {
       setUploadingBanner(false);
     }
@@ -638,7 +699,7 @@ export default function AdminPanel({
             }`}
           >
             <HelpCircle className="inline-block h-3.5 w-3.5 mr-1.5" />
-            Quizzes & Exames ({quizzes.length})
+            Quizzes e Exames ({quizzes.length})
           </button>
 
           <button
@@ -658,7 +719,7 @@ export default function AdminPanel({
             }`}
           >
             <Megaphone className="inline-block h-3.5 w-3.5 mr-1.5" />
-            Banners de Promoção ({banners.length})
+            Anúncios ({banners.length})
           </button>
 
           <button
@@ -679,6 +740,16 @@ export default function AdminPanel({
           >
             <DollarSign className="inline-block h-3.5 w-3.5 mr-1.5" />
             Financeiro ({paymentTickets.filter(t => t.status === "PENDING").length} pendentes)
+          </button>
+
+          <button
+            onClick={() => { setActiveTab("support"); setStatusMessage(null); }}
+            className={`px-4 py-3 border-b-2 cursor-pointer transition-colors ${
+              activeTab === "support" ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <Headphones className="inline-block h-3.5 w-3.5 mr-1.5" />
+            Suporte ({supportMessages.length})
           </button>
         </div>
 
@@ -1172,60 +1243,150 @@ export default function AdminPanel({
               </form>
             </div>
 
-            {/* List attached videos */}
+            {/* List attached videos - GROUPED BY COURSE */}
             <div className="lg:col-span-7 bg-white border border-slate-200 rounded-sm shadow-xs" style={{ padding: "32px" }}>
-              <h3 className="font-display font-semibold text-base text-[#0a2540] border-b border-slate-100 pb-2 mb-4">
-                Grade de Aulas e Vídeos ({videos.length})
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
+                <div>
+                  <h3 className="font-display font-semibold text-base text-[#0a2540]">
+                    Grade de Aulas por Curso ({videos.length})
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-sans mt-0.5">
+                    Vídeos organizados individualmente por cada curso para que não se misturem.
+                  </p>
+                </div>
 
-              <div className="overflow-x-auto min-h-[300px]">
-                <table className="w-full text-left font-sans text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-slate-400 uppercase font-mono tracking-wider">
-                      <th className="pb-3 px-2">Curso Pertencente</th>
-                      <th className="pb-3 px-2">Título da Aula</th>
-                      <th className="pb-3 px-2 font-mono">Duração</th>
-                      <th className="pb-3 px-2 text-center">Operações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {videos.map(vid => {
-                      const associatedCourse = courses.find(c => c.id === vid.courseId);
-                      return (
-                        <tr key={vid.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-2 font-semibold text-slate-600 truncate max-w-[140px]" title={associatedCourse?.title}>
-                            {associatedCourse?.title || "Desconhecido"}
-                          </td>
-                          <td className="py-2.5 px-2 font-bold text-[#0a2540]">{vid.title}</td>
-                          <td className="py-2.5 px-2 font-mono text-slate-500">{vid.duration}</td>
-                          <td className="py-2.5 px-2">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleVideoEditStart(vid)}
-                                className="p-1 text-[#0d9488] hover:bg-teal-50 rounded-xs transition-colors cursor-pointer"
-                                title="Editar Aula"
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (confirm(`Remover permanentemente a aula por vídeo: "${vid.title}"?`)) {
-                                    onDeleteVideo(vid.id);
-                                    triggerAlert("success", "Vídeo de aula desconectado da base.");
-                                  }
-                                }}
-                                className="p-1 text-rose-600 hover:bg-rose-50 rounded-xs transition-colors cursor-pointer"
-                                title="Anular Vídeo"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                {/* Filter and Search controls */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Pesquisar aula..."
+                      value={videoSearchQuery}
+                      onChange={(e) => setVideoSearchQuery(e.target.value)}
+                      className="pl-7 pr-3 py-1.5 border border-slate-200 rounded-sm text-xs focus:outline-[#0d9488]"
+                    />
+                    <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2 top-2" />
+                  </div>
+
+                  <select
+                    value={selectedCourseVideoFilter}
+                    onChange={(e) => setSelectedCourseVideoFilter(e.target.value)}
+                    className="px-2.5 py-1.5 border border-slate-200 bg-white rounded-sm text-xs font-semibold focus:outline-[#0d9488]"
+                  >
+                    <option value="ALL">Todos os Cursos ({courses.length})</option>
+                    {courses.map(c => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Grouped Course Sections */}
+              <div className="space-y-4 max-h-[750px] overflow-y-auto pr-1">
+                {courses
+                  .filter(c => selectedCourseVideoFilter === "ALL" || c.id === selectedCourseVideoFilter)
+                  .map(course => {
+                    const courseVideos = videos.filter(v => 
+                      v.courseId === course.id && 
+                      (!videoSearchQuery.trim() || v.title.toLowerCase().includes(videoSearchQuery.toLowerCase()))
+                    );
+
+                    return (
+                      <div 
+                        key={course.id}
+                        className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs"
+                      >
+                        {/* Course Group Header */}
+                        <div className="bg-slate-50 border-b border-slate-200 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-xs sm:text-sm text-[#0a2540] truncate" title={course.title}>
+                              {course.title}
+                            </h4>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                              <span className="text-slate-600 font-normal">
+                                {course.tag}
+                              </span>
+                              <span>Formador: {course.instructorName}</span>
+                              <span>• {courseVideos.length} aula{courseVideos.length !== 1 ? "s" : ""}</span>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVideoCourseId(course.id);
+                              const form = document.getElementById("v-title");
+                              if (form) form.focus();
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] bg-[#0d9488] hover:bg-[#0f766e] text-white font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Adicionar aula diretamente neste curso"
+                          >
+                            <span>Adicionar</span>
+                          </button>
+                        </div>
+
+                        {/* Videos Table for this specific course */}
+                        {courseVideos.length === 0 ? (
+                          <div className="p-4 text-center text-slate-400 text-xs italic">
+                            Nenhuma aula cadastrada para este curso ainda. Use o botão acima para adicionar.
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left font-sans text-xs">
+                              <thead>
+                                <tr className="border-b border-slate-100 text-slate-400 font-mono text-[10px] uppercase tracking-wider bg-slate-50/50">
+                                  <th className="py-2 px-3 w-10">#</th>
+                                  <th className="py-2 px-3">Título da Aula</th>
+                                  <th className="py-2 px-3 font-mono">Duração</th>
+                                  <th className="py-2 px-3 font-mono">ID Wistia</th>
+                                  <th className="py-2 px-3 text-center">Ações</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {courseVideos.map((vid, idx) => (
+                                  <tr key={vid.id} className="hover:bg-slate-50/80 transition-colors">
+                                    <td className="py-2.5 px-3 font-mono text-slate-400 font-bold">{idx + 1}</td>
+                                    <td className="py-2.5 px-3 font-semibold text-slate-800">{vid.title}</td>
+                                    <td className="py-2.5 px-3 font-mono text-slate-500">{vid.duration}</td>
+                                    <td className="py-2.5 px-3 font-mono text-slate-400 text-[10px] truncate max-w-[90px]">{vid.videoUrl}</td>
+                                    <td className="py-2.5 px-3">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <button
+                                          onClick={() => handleVideoEditStart(vid)}
+                                          className="p-1 text-[#0d9488] hover:bg-teal-50 rounded-xs transition-colors cursor-pointer"
+                                          title="Editar Aula"
+                                        >
+                                          <Edit3 className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            if (confirm(`Remover permanentemente a aula: "${vid.title}" deste curso?`)) {
+                                              onDeleteVideo(vid.id);
+                                              triggerAlert("success", "Aula removida com sucesso.");
+                                            }
+                                          }}
+                                          className="p-1 text-rose-600 hover:bg-rose-50 rounded-xs transition-colors cursor-pointer"
+                                          title="Anular Vídeo"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                {courses.length === 0 && (
+                  <div className="p-8 text-center text-slate-400 text-xs">
+                    Nenhum curso cadastrado ainda. Cadastre um curso primeiro para poder adicionar aulas.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1426,7 +1587,7 @@ export default function AdminPanel({
             <div className="lg:col-span-7 bg-white border border-slate-200 rounded-sm shadow-xs" style={{ padding: "32px" }}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-2">
                 <h3 className="font-display font-semibold text-base text-[#0a2540]">
-                  Perguntas & Exames ({quizzes.length})
+                  Perguntas e Exames ({quizzes.length})
                 </h3>
 
                 <div className="flex items-center gap-2">
@@ -1782,25 +1943,30 @@ export default function AdminPanel({
           </div>
         )}
 
-        {/* TAB 6: BANNER PROMO MANAGEMENT */}
+        {/* TAB 6: ADS / ANÚNCIOS MANAGEMENT */}
         {activeTab === "banners" && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start text-left" id="panel-admin-banners">
-            {/* Form configure banner */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start text-left" id="panel-admin-ads">
+            {/* Form configure ad */}
             <div className="lg:col-span-5 bg-white border border-slate-200 rounded-sm shadow-xs" style={{ padding: "32px" }}>
-              <h3 className="font-display font-semibold text-base text-[#0a2540] border-b border-slate-100 pb-2 mb-4">
-                {editingBannerId ? "Editar Banner de Promoção" : "Gerar Novo Banner Promocional"}
-              </h3>
+              <div className="border-b border-slate-100 pb-2 mb-4">
+                <h3 className="font-display font-semibold text-base text-[#0a2540]">
+                  {editingBannerId ? "Editar Anúncio" : "Publicar Novo Anúncio"}
+                </h3>
+                <p className="text-xs text-slate-500 font-sans mt-0.5">
+                  Os anúncios cadastrados aqui aparecem diretamente no card vertical de anúncios na Página Inicial.
+                </p>
+              </div>
 
               <form onSubmit={handleBannerSubmit} className="space-y-4">
                 <div className="flex flex-col">
                   <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1" htmlFor="b-title">
-                    Título Publicitário *
+                    Título do Anúncio *
                   </label>
                   <input
                     id="b-title"
                     type="text"
                     required
-                    placeholder="Semana Especial de Inverno"
+                    placeholder="e.g. Aprenda Informática e Programação do Zero"
                     value={bannerTitle}
                     onChange={(e) => setBannerTitle(e.target.value)}
                     className="px-3 py-2 border border-slate-200 focus:outline-[#0d9488] text-sm"
@@ -1809,12 +1975,12 @@ export default function AdminPanel({
 
                 <div className="flex flex-col">
                   <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1" htmlFor="b-sub">
-                    Subtítulo / Descrição da oferta (Opcional)
+                    Subtítulo / Descrição do Anúncio (Opcional)
                   </label>
                   <textarea
                     id="b-sub"
                     rows={2}
-                    placeholder="Preços cortados pela metade para inscrições agendadas de imediato."
+                    placeholder="e.g. Atendimento personalizado e suporte direto com o Formador Aldo Valige no WhatsApp."
                     value={bannerSubtitle}
                     onChange={(e) => setBannerSubtitle(e.target.value)}
                     className="px-3 py-2 border border-slate-200 focus:outline-[#0d9488] text-sm"
@@ -1823,12 +1989,12 @@ export default function AdminPanel({
 
                 <div className="flex flex-col">
                   <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1" htmlFor="b-btn">
-                    Texto do Botão
+                    Texto do Botão de Ação
                   </label>
                   <input
                     id="b-btn"
                     type="text"
-                    placeholder="Ver Curso"
+                    placeholder="e.g. Falar no WhatsApp ou Ver Curso"
                     value={bannerButtonText}
                     onChange={(e) => setBannerButtonText(e.target.value)}
                     className="px-3 py-2 border border-slate-200 focus:outline-[#0d9488] text-sm"
@@ -1838,7 +2004,7 @@ export default function AdminPanel({
                 {/* Course Link Selector */}
                 <div className="flex flex-col">
                   <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1" htmlFor="b-course">
-                    Curso Vinculado ao Botão (Opcional)
+                    Curso Vinculado ao Anúncio (Opcional)
                   </label>
                   <select
                     id="b-course"
@@ -1846,7 +2012,7 @@ export default function AdminPanel({
                     onChange={(e) => setBannerCourseId(e.target.value)}
                     className="px-3 py-2 border border-slate-200 focus:outline-[#0d9488] text-sm bg-white"
                   >
-                    <option value="">— Sem curso vinculado (rolar para cursos) —</option>
+                    <option value="">— Sem curso vinculado —</option>
                     {courses.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title} {c.price === 0 ? "(Grátis)" : `(${c.price.toLocaleString("pt-PT")} MT)`}
@@ -1860,14 +2026,32 @@ export default function AdminPanel({
                   )}
                 </div>
 
-                {/* Banner Image Uploader */}
+                {/* External / Specific Page Link */}
+                <div className="flex flex-col">
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1" htmlFor="b-link">
+                    Link da Página / URL Externa (Opcional)
+                  </label>
+                  <input
+                    id="b-link"
+                    type="url"
+                    placeholder="e.g. https://instagram.com/... ou https://wa.me/... ou https://seusite.com"
+                    value={bannerLinkUrl}
+                    onChange={(e) => setBannerLinkUrl(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 focus:outline-[#0d9488] text-sm font-mono"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Se preenchido, o botão do anúncio levará o usuário diretamente para esta página ou link externo ao clicar.
+                  </p>
+                </div>
+
+                {/* Ad Image Uploader */}
                 <div className="flex flex-col">
                   <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Imagem do Banner *
+                    Imagem do Anúncio (Vertical / Instagram ou Quadrada) *
                   </label>
                   
                   {(bannerImageUrl || bannerImageFile) && (
-                    <div className="mb-2 relative rounded border border-slate-200 overflow-hidden bg-slate-50 h-24 flex items-center justify-center">
+                    <div className="mb-2 relative rounded border border-slate-200 overflow-hidden bg-slate-50 h-28 flex items-center justify-center">
                       <img 
                         src={bannerImageFile ? URL.createObjectURL(bannerImageFile) : bannerImageUrl} 
                         alt="Preview" 
@@ -1900,10 +2084,10 @@ export default function AdminPanel({
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                     <p className="text-xs text-slate-500 font-medium">
-                      {bannerImageFile ? bannerImageFile.name : "Clique para selecionar a imagem"}
+                      {bannerImageFile ? bannerImageFile.name : "Clique para selecionar a imagem do anúncio"}
                     </p>
                     <p className="text-[9px] text-slate-400 mt-1">
-                      PNG, JPG, JPEG ou WEBP recomendados
+                      PNG, JPG, JPEG ou WEBP (formato vertical estilo Instagram recomendado)
                     </p>
                   </div>
                 </div>
@@ -1917,7 +2101,7 @@ export default function AdminPanel({
                     className="h-4 w-4 text-[#0d9488] border-slate-300 rounded"
                   />
                   <label htmlFor="b-active" className="text-xs font-semibold text-slate-600 select-none">
-                    Banner Ativo e Visível no Carrossel
+                    Anúncio Ativo e Visível no Card Lateral
                   </label>
                 </div>
 
@@ -1928,7 +2112,7 @@ export default function AdminPanel({
                     className="flex-1 bg-[#0d9488] hover:bg-[#0f766e] disabled:bg-slate-400 text-white font-bold uppercase tracking-wider text-[10px] py-2.5 rounded-sm cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     {uploadingBanner && <Loader2 className="h-3 w-3 animate-spin" />}
-                    {uploadingBanner ? "Salvando..." : (editingBannerId ? "Atualizar Banner" : "+ Criar Banner")}
+                    {uploadingBanner ? "Salvando..." : (editingBannerId ? "Atualizar Anúncio" : "+ Publicar Anúncio")}
                   </button>
 
                   {editingBannerId && (
@@ -1943,6 +2127,7 @@ export default function AdminPanel({
                         setBannerImageUrl("");
                         setBannerImageFile(null);
                         setBannerCourseId("");
+                        setBannerLinkUrl("");
                       }}
                       className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold uppercase tracking-wider text-[10px] py-2.5 px-4 rounded-sm cursor-pointer"
                     >
@@ -1953,18 +2138,18 @@ export default function AdminPanel({
               </form>
             </div>
 
-            {/* List existing banners */}
+            {/* List existing ads */}
             <div className="lg:col-span-7 bg-white border border-slate-200 rounded-sm shadow-xs" style={{ padding: "32px" }}>
               <h3 className="font-display font-semibold text-base text-[#0a2540] border-b border-slate-100 pb-2 mb-4">
-                Banners de Divulgação Fornecidos ({banners.length})
+                Anúncios Cadastrados ({banners.length})
               </h3>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left font-sans text-xs">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-400 uppercase font-mono tracking-wider">
-                      <th className="pb-3 px-2">Título do Banner</th>
-                      <th className="pb-3 px-2">Subtítulo / Descritivo</th>
+                      <th className="pb-3 px-2">Título do Anúncio</th>
+                      <th className="pb-3 px-2">Descrição</th>
                       <th className="pb-3 px-2">Estado</th>
                       <th className="pb-3 px-2 text-center">Ações</th>
                     </tr>
@@ -1978,15 +2163,27 @@ export default function AdminPanel({
                               <img 
                                 src={b.imageUrl} 
                                 alt={b.title} 
-                                className="w-12 h-8 object-cover rounded-xs border border-slate-200"
+                                className="w-10 h-12 object-cover rounded-sm border border-slate-200"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
-                              <div className="w-12 h-8 bg-slate-100 flex items-center justify-center rounded-xs text-[10px] text-slate-400 font-mono">
+                              <div className="w-10 h-12 bg-slate-100 flex items-center justify-center rounded-sm text-[10px] text-slate-400 font-mono">
                                 Sem img
                               </div>
                             )}
-                            <span className="truncate max-w-[120px]" title={b.title}>{b.title}</span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate max-w-[140px]" title={b.title}>{b.title}</span>
+                              {b.linkUrl && (
+                                <span className="text-[9px] font-mono text-teal-600 truncate max-w-[140px]" title={b.linkUrl}>
+                                  🔗 {b.linkUrl}
+                                </span>
+                              )}
+                              {b.courseId && (
+                                <span className="text-[9px] font-mono text-indigo-600 truncate max-w-[140px]">
+                                  📚 Curso vinculado
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-2.5 px-2 max-w-sm truncate text-slate-500" title={b.subtitle}>
@@ -2011,21 +2208,22 @@ export default function AdminPanel({
                                 setBannerImageUrl(b.imageUrl || "");
                                 setBannerImageFile(null);
                                 setBannerCourseId(b.courseId || "");
+                                setBannerLinkUrl(b.linkUrl || "");
                               }}
                               className="p-1 text-[#0d9488] hover:bg-teal-50 rounded-xs transition-colors cursor-pointer"
-                              title="Editar Banner"
+                              title="Editar Anúncio"
                             >
                               <Edit3 className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => {
-                                if (confirm(`Deseja mesmo remover o banner de promoções: "${b.title}"?`)) {
+                                if (confirm(`Deseja mesmo remover o anúncio: "${b.title}"?`)) {
                                   onDeleteBanner(b.id);
-                                  triggerAlert("success", "Banner promocional deletado.");
+                                  triggerAlert("success", "Anúncio deletado.");
                                 }
                               }}
                               className="p-1 text-rose-600 hover:bg-rose-50 rounded-xs transition-colors cursor-pointer"
-                              title="Remover Banner"
+                              title="Remover Anúncio"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -2237,6 +2435,193 @@ export default function AdminPanel({
             onSavePaymentMethod={onSavePaymentMethod}
             currentUser={currentUser}
           />
+        )}
+
+        {/* TAB 8: ATENDIMENTO & MENSAGENS DE SUPORTE */}
+        {activeTab === "support" && (
+          <div className="bg-white border border-slate-200 rounded-sm shadow-xs text-left" style={{ padding: "32px" }} id="panel-admin-support">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Headphones className="h-5 w-5 text-[#0d9488]" />
+                  <h3 className="font-display font-semibold text-lg text-[#0a2540]">
+                    Atendimento ao Estudante e Mensagens de Suporte ({supportMessages.length})
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 font-sans mt-1">
+                  Mensagens recebidas através do botão de suporte flutuante. Responda diretamente ao aluno para que apareça no suporte dele.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://wa.me/258873308934"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-sm shadow-xs transition-colors cursor-pointer"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>WhatsApp Oficial</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Message List */}
+              <div className="lg:col-span-7 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+                  Histórico de Chamados de Suporte
+                </h4>
+
+                {supportMessages.length === 0 ? (
+                  <div className="p-12 text-center text-slate-400 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
+                    <Headphones className="h-8 w-8 text-slate-300 mx-auto" />
+                    <p className="text-xs font-semibold text-slate-600">Nenhuma mensagem de suporte registada de momento.</p>
+                    <p className="text-[11px] text-slate-400">
+                      Quando os utilizadores ou visitantes enviarem dúvidas através do botão de suporte flutuante, elas serão listadas aqui.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    {supportMessages.map((msg) => {
+                      const isFormador = msg.authorRole === "formador";
+                      const isAdmin = msg.authorRole === "admin";
+                      const isReply = isFormador || isAdmin;
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-4 rounded-xl border transition-all ${
+                            isReply
+                              ? "bg-teal-50/70 border-teal-200 ml-4"
+                              : "bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b border-black/5 pb-2 mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] ${
+                                isReply ? "bg-teal-600 text-white" : "bg-slate-200 text-slate-700"
+                              }`}>
+                                {isReply ? <ShieldCheck className="h-3.5 w-3.5" /> : msg.authorName.slice(0, 1)}
+                              </div>
+                              <span className="font-bold text-xs text-slate-800">
+                                {msg.authorName}
+                              </span>
+                              {isReply ? (
+                                <span className="bg-teal-600 text-white text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-xs">
+                                  Resposta do Admin
+                                </span>
+                              ) : (
+                                <span className="bg-slate-100 text-slate-600 text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded-xs">
+                                  {msg.authorRole}
+                                </span>
+                              )}
+                            </div>
+
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {new Date(msg.createdAt).toLocaleDateString("pt-PT")} • {new Date(msg.createdAt).toLocaleTimeString("pt-PT").slice(0, 5)}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">
+                            {msg.message}
+                          </p>
+
+                          {!isReply && (
+                            <div className="pt-2 mt-2 border-t border-slate-100 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReplyingToMessageId(msg.id);
+                                  setReplyText(`@${msg.authorName}: `);
+                                }}
+                                className="text-[11px] font-bold text-[#0d9488] hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>Responder a este estudante</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Reply Form */}
+              <div className="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 font-mono">
+                    Responder no Canal de Suporte
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                    A resposta será exibida em tempo real no widget de suporte do estudante.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex flex-col">
+                    <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      Assinar Resposta como:
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value={`${currentUser.fullName} (Formador / Suporte Oficial)`}
+                      className="px-3 py-1.5 bg-white border border-slate-200 text-xs text-slate-600 font-semibold rounded-sm"
+                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      Mensagem de Resposta:
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Escreva a resposta para o estudante..."
+                      className="px-3 py-2 bg-white border border-slate-200 focus:outline-[#0d9488] text-xs rounded-sm resize-none font-sans"
+                    />
+                  </div>
+
+                  {/* Quick canned replies */}
+                  <div className="space-y-1">
+                    <span className="text-[9.5px] font-mono font-bold uppercase text-slate-400">
+                      Respostas Rápidas:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        "A sua matrícula já foi confirmada com sucesso!",
+                        "Por favor envie o comprovativo M-Pesa com referência legível.",
+                        "O seu acesso aos vídeos e materiais didáticos foi liberado.",
+                        "Qualquer dúvida adicional pode nos contactar via WhatsApp."
+                      ].map((canned, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setReplyText(prev => prev ? `${prev} ${canned}` : canned)}
+                          className="text-[10px] bg-white border border-slate-200 hover:border-teal-500 hover:text-teal-700 px-2 py-1 rounded-sm text-slate-600 transition-colors cursor-pointer text-left"
+                        >
+                          + {canned.slice(0, 32)}...
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!replyText.trim() || isSendingReply}
+                    onClick={() => handleSendSupportReply()}
+                    className="w-full bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-40 text-white text-xs font-bold uppercase tracking-wider py-2.5 rounded-sm shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>{isSendingReply ? "Enviando..." : "Enviar Resposta de Suporte"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Footer info lock */}

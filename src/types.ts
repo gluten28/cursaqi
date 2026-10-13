@@ -58,6 +58,7 @@ export interface PromoBanner {
   isActive: boolean;
   imageUrl?: string;
   courseId?: string; // Optional: links CTA button to a specific course
+  linkUrl?: string;  // Optional: external or specific page URL (e.g. https://... or wa.me/...)
 }
 
 export interface UserProgress {
@@ -79,6 +80,7 @@ export interface UserProfile {
   role: "admin" | "user";
   enrolledCourseProgress: UserProgress[];
   favorites: string[]; // array of courseIds
+  avatarUrl?: string; // profile picture URL
   planType?: "gratuito" | "pago"; // "gratuito" by default, can upgrade to "pago"
   premiumActivatedAt?: string; // ISO date of activation
   premiumExpiresAt?: string; // ISO date of expiration
@@ -172,7 +174,7 @@ export interface PaymentLog {
   createdAt: string;
 }
 
-export type ChatCategory = "ideia" | "pergunta" | "sugestao" | "ajuda" | "geral";
+export type ChatCategory = "ideia" | "pergunta" | "sugestao" | "ajuda" | "geral" | "suporte";
 
 export interface ChatMessage {
   id: string;

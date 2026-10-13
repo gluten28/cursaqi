@@ -480,7 +480,7 @@ export default function CourseModal({
                   <div className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-[#0a2540]" />
                     <h3 className="font-display font-bold text-sm text-[#0a2540] uppercase tracking-wider">
-                      Exame Final & Certificado de Conclusão
+                      Exame Final e Certificado de Conclusão
                     </h3>
                   </div>
 
@@ -497,13 +497,16 @@ export default function CourseModal({
                             Parabéns! Obteve {enrollmentProgress.examScore}% de aproveitamento no Exame Final.
                           </h4>
                           <p className="text-xs text-slate-650 leading-relaxed max-w-2xl font-sans">
-                            A conclusão do seu curso foi validada com êxito! O seu certificado digital de conclusão está disponível para visualização e impressão imediata.
+                            A conclusão do seu curso foi validada com êxito! O seu certificado digital de participação na plataforma está disponível para visualização e impressão imediata.
+                          </p>
+                          <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200 font-sans">
+                            <strong>Aviso Importante:</strong> O certificado é <strong>somente de participação na plataforma CUrsaQi</strong> e aproveitamento prático. <strong>Não pode ser usado como anexo em concursos de vaga de emprego</strong>.
                           </p>
                         </div>
 
                         <div className="bg-white p-4 border border-emerald-200 rounded-sm text-xs text-slate-600 space-y-1.5 max-w-xl">
                           <span className="block font-bold text-slate-750 text-[10px] uppercase tracking-wider">Entrega do Certificado Físico:</span>
-                          <span className="block">O seu <strong>certificado físico de conclusão</strong> será assinado pelo Formador Aldo Valige e enviado para:</span>
+                          <span className="block">O seu <strong>certificado físico de participação na plataforma</strong> será assinado pelo Formador Aldo Valige e enviado para:</span>
                           <span className="block bg-slate-50 p-2 border.5 border-slate-100 rounded-xs font-mono text-[10.5px]">
                             {currentUser?.address || "Endereço não cadastrado. Por favor, atualize o seu perfil."}
                           </span>
@@ -628,7 +631,7 @@ export default function CourseModal({
                         <div>
                           <h4 className="font-display font-bold text-amber-900 text-sm">Exame Final em Preparação</h4>
                           <p className="text-xs text-amber-800 leading-relaxed font-sans mt-1">
-                            O administrador da plataforma ainda não cadastrou perguntas para o exame final deste curso. As perguntas serão adicionadas em breve no Painel Admin.
+                            O administrador da plataforma ainda não cadastrou perguntas para o exame final deste curso.
                           </p>
                         </div>
                       </div>
@@ -643,8 +646,9 @@ export default function CourseModal({
                         </p>
                       </div>
                       
-                      <div className="bg-[#0a2540]/5 p-3.5 border border-slate-200 rounded-sm text-xs text-slate-650 max-w-xl">
-                        🎓 <strong>Direito a Certificado Físico:</strong> Ao obter aprovação, você terá direito a receber o seu <strong>certificado de conclusão físico oficial</strong> enviado de forma gratuita à sua residência.
+                      <div className="bg-[#0a2540]/5 p-3.5 border border-slate-200 rounded-sm text-xs text-slate-650 max-w-xl space-y-1">
+                        <div>🎓 <strong>Direito a Certificado Físico:</strong> Ao obter aprovação, você terá direito a receber o seu <strong>certificado de participação físico na plataforma</strong> enviado de forma gratuita à sua residência.</div>
+                        <div className="text-[10.5px] text-amber-700 font-sans"><strong>Nota:</strong> O certificado é exclusivamente de participação na plataforma e não pode ser anexado a concursos de vaga de emprego.</div>
                       </div>
 
                       <button

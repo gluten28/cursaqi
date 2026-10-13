@@ -1,16 +1,37 @@
 import React from "react";
-import { BookOpen, GraduationCap, ShieldCheck, Award } from "lucide-react";
+import { BookOpen, GraduationCap, ShieldCheck, Award, Film, FolderGit2, FileText, Users } from "lucide-react";
+import { Course, Category, CourseVideo, DidacticMaterial } from "../types";
 
-export default function AboutView() {
+interface AboutViewProps {
+  courses?: Course[];
+  videos?: CourseVideo[];
+  categories?: Category[];
+  materials?: DidacticMaterial[];
+}
+
+export default function AboutView({
+  courses = [],
+  videos = [],
+  categories = [],
+  materials = []
+}: AboutViewProps) {
+  const totalCourses = courses.length;
+  const totalVideos = videos.length;
+  const totalCategories = categories.length;
+  const totalMaterials = materials.length;
+  const totalStudents = courses.reduce((acc, c) => acc + (c.enrolledStudentsCount || 0), 0);
+
   return (
     <div className="w-full bg-[#f8fafc] font-sans min-h-screen py-12 px-4" id="about-us-page">
       <div className="w-full max-w-4xl mx-auto space-y-12" id="about-us-container">
 
-        {/* ===== FOUNDER & FORMADOR PROFILE — shown FIRST ===== */}
+        {/* ===== FOUNDER E FORMADOR PROFILE — shown FIRST ===== */}
         <div className="bg-white border border-slate-200 rounded-sm overflow-hidden" id="founder-profile-card">
           <div className="bg-[#0a2540] px-8 py-5 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-mono tracking-widest text-[#0d9488] uppercase font-bold block mb-1">Fundador &amp; Formador Principal</span>
+              <span className="text-[10px] font-mono tracking-widest text-[#0d9488] uppercase font-bold block mb-1">
+                Fundador e Formador Principal
+              </span>
               <h1 className="font-display font-bold text-2xl text-white">Aldo Bonífacio Valige</h1>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -32,11 +53,11 @@ export default function AboutView() {
               </div>
               <div className="text-center">
                 <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">CURSAQi</span>
-                <span className="text-xs font-bold text-[#0d9488] font-sans">Fundação &amp; Liderança</span>
+                <span className="text-xs font-bold text-[#0d9488] font-sans">Fundação e Liderança</span>
               </div>
             </div>
 
-            {/* Bio & Skills */}
+            {/* Bio e Competências */}
             <div className="flex-1 space-y-5 text-left">
               <div className="space-y-2">
                 <h2 className="font-display font-bold text-base text-[#0a2540]">Perfil Profissional</h2>
@@ -133,10 +154,10 @@ export default function AboutView() {
               <GraduationCap className="h-6 w-6" />
             </div>
             <h3 className="font-display font-bold text-lg text-white">
-              Certificado de Conclusão do Curso
+              Certificado de Participação na Plataforma
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              Ao concluir todas as aulas e atingir a pontuação necessária no teste final, o aluno tem direito a um certificado de conclusão comprovando que completou o curso com sucesso.
+              Ao concluir todas as aulas e atingir a pontuação necessária no teste final, o aluno emite o seu certificado de participação comprovando a frequência no curso (documento livre de participação na plataforma; não pode ser usado como anexo em concursos de vaga de emprego).
             </p>
           </div>
 
@@ -154,31 +175,67 @@ export default function AboutView() {
 
         </div>
 
-        {/* Corporate stats section */}
+        {/* Corporate stats section — DYNAMIC REAL NUMBERS THAT AUTO-UPDATE */}
         <div className="bg-white border border-slate-200 rounded-sm p-8 text-left space-y-6" id="about-stats-info">
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="font-display font-bold text-xl text-[#0a2540]">
-              Estrutura dos Cursos
-            </h3>
-            <p className="text-xs text-slate-400 font-sans mt-1">Estatísticas de cursos e conteúdos na plataforma</p>
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="font-display font-bold text-xl text-[#0a2540]">
+                Estrutura dos Cursos
+              </h3>
+              <p className="text-xs text-slate-400 font-sans mt-1">Estatísticas reais e atualizadas automaticamente a partir da base de dados</p>
+            </div>
+            <span className="text-[10px] font-mono uppercase bg-teal-50 text-[#0d9488] font-bold px-2.5 py-1 rounded-sm border border-teal-200 self-start sm:self-auto">
+              ● Atualizado em Tempo Real
+            </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6" id="about-stats-panel">
-            <div className="space-y-1">
-              <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider">Cursos Publicados</div>
+            <div className="space-y-1 p-3 bg-slate-50 rounded-sm border border-slate-100">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-[#0d9488]" />
+                <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">
+                  {totalCourses}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase font-mono text-slate-500 font-bold tracking-wider">
+                Cursos Publicados
+              </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0%</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider">Média de Aproveitamento</div>
+
+            <div className="space-y-1 p-3 bg-slate-50 rounded-sm border border-slate-100">
+              <div className="flex items-center gap-2">
+                <Film className="h-4 w-4 text-[#0d9488]" />
+                <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">
+                  {totalVideos}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase font-mono text-slate-500 font-bold tracking-wider">
+                Aulas em Vídeo
+              </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider">Aulas em Vídeo</div>
+
+            <div className="space-y-1 p-3 bg-slate-50 rounded-sm border border-slate-100">
+              <div className="flex items-center gap-2">
+                <FolderGit2 className="h-4 w-4 text-[#0d9488]" />
+                <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">
+                  {totalCategories}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase font-mono text-slate-500 font-bold tracking-wider font-semibold">
+                Categorias e Áreas
+              </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">0</div>
-              <div className="text-[10px] uppercase font-mono text-slate-400 font-bold tracking-wider font-semibold">Tópicos de Informática</div>
+
+            <div className="space-y-1 p-3 bg-slate-50 rounded-sm border border-slate-100">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-[#0d9488]" />
+                <div className="text-2xl md:text-3xl font-display font-bold text-[#0d9488]">
+                  {totalMaterials}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase font-mono text-slate-500 font-bold tracking-wider">
+                Materiais Didáticos PDF
+              </div>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Save, ShieldCheck, Key, HelpCircle, User, Award, Percent, Sparkles, Clock, Check } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Save, ShieldCheck, Key, HelpCircle, User, Award, Percent, Sparkles, Clock, Check, Camera, Upload, Loader2 } from "lucide-react";
 import { UserProfile } from "../types";
-import { supabase } from "../supabase";
+import { supabase, dbUploadUserAvatar } from "../supabase";
 
 interface ProfileViewProps {
   user: UserProfile;
@@ -20,10 +20,46 @@ export default function ProfileView({
   const [whatsapp, setWhatsapp] = useState(user.whatsapp);
   const [address, setAddress] = useState(user.address);
   const [password, setPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || "");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Por favor selecione um ficheiro de imagem válido (PNG, JPG, WEBP).");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setErrorMsg("");
+
+    try {
+      const uploadedUrl = await dbUploadUserAvatar(file, user.id);
+      if (uploadedUrl) {
+        setAvatarUrl(uploadedUrl);
+        const updatedUser: UserProfile = {
+          ...user,
+          avatarUrl: uploadedUrl,
+        };
+        onUpdateProfile(updatedUser);
+        setSuccessMsg("Foto de perfil atualizada com sucesso!");
+        setTimeout(() => setSuccessMsg(""), 4000);
+      } else {
+        setErrorMsg("Não foi possível carregar a imagem. Tente novamente.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Erro ao carregar a foto de perfil.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +91,7 @@ export default function ProfileView({
         fullName: fullName.trim(),
         whatsapp: whatsapp.trim(),
         address: address.trim(),
+        avatarUrl: avatarUrl || user.avatarUrl,
       };
 
       onUpdateProfile(updatedUser);
@@ -85,9 +122,62 @@ export default function ProfileView({
         {/* Profile Jumbotron banner */}
         <div className="bg-white border border-slate-200 p-8 rounded-sm text-left shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6" id="profile-jumbo-card">
           <div className="flex items-center gap-5" id="profile-avatar-combo">
-            <div className="w-20 h-20 bg-slate-100 border-2 border-slate-350 text-[#0d9488] font-bold text-3xl font-mono flex items-center justify-center rounded-sm shadow-inner shrink-0">
-              {fullName.slice(0, 2).toUpperCase() || "US"}
+            
+            {/* Avatar with Photo Upload Button */}
+            <div className="relative group shrink-0">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarFileChange}
+                accept="image/*"
+                className="hidden"
+                id="user-avatar-upload-input"
+              />
+              
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-20 h-20 bg-slate-100 border-2 border-slate-300 text-[#0d9488] font-bold text-3xl font-mono flex items-center justify-center rounded-full shadow-inner overflow-hidden cursor-pointer relative"
+                title="Clique para alterar a foto de perfil"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  fullName.slice(0, 2).toUpperCase() || "US"
+                )}
+
+                {/* Upload overlay on hover */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] font-bold">
+                  {uploadingAvatar ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Camera className="h-5 w-5 mb-0.5" />
+                      <span>Alterar</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Camera icon badge */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute -bottom-1 -right-1 p-1.5 bg-[#0d9488] hover:bg-[#0f766e] text-white rounded-full shadow-md cursor-pointer transition-transform hover:scale-110"
+                title="Carregar foto de perfil"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Camera className="h-3 w-3" />
+                )}
+              </button>
             </div>
+
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-display font-bold text-2xl text-[#0a2540] tracking-tight">{fullName}</h3>
@@ -100,6 +190,13 @@ export default function ProfileView({
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono tracking-wide">{user.email} (Estudante Registado)</p>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-[11px] text-[#0d9488] font-semibold hover:underline cursor-pointer block pt-0.5"
+              >
+                {avatarUrl ? "Trocar foto de perfil" : "Adicionar foto de perfil"}
+              </button>
             </div>
           </div>
 
@@ -114,7 +211,7 @@ export default function ProfileView({
           {/* Left Block: Personal registration form (7 cols) */}
           <div className="lg:col-span-7 bg-white border border-slate-200 p-6 md:p-8 rounded-sm text-left shadow-xs space-y-6" id="profile-form-block">
             <div>
-              <h3 className="font-display font-bold text-lg text-[#0a2540]">Dados Pessoais & Credenciais</h3>
+              <h3 className="font-display font-bold text-lg text-[#0a2540]">Dados Pessoais e Credenciais</h3>
               <p className="text-xs text-slate-400 font-sans mt-0.5">Mantenha a sua ficha cadastral atualizada para acompanhamento de progresso e contactos</p>
             </div>
 
@@ -264,7 +361,7 @@ export default function ProfileView({
                     <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-amber-650 bg-amber-50 px-2 py-0.5 rounded-xs border border-amber-200">
                       Upgrade Disponível
                     </span>
-                    <h3 className="font-display font-bold text-base text-[#0a2540] mt-2">Apoio & Acesso Premium</h3>
+                    <h3 className="font-display font-bold text-base text-[#0a2540] mt-2">Apoio e Acesso Premium</h3>
                     <p className="text-[11px] text-slate-550 font-sans leading-relaxed mt-0.5">
                       Subscreva o plano pago para desbloquear acesso a todos os cursos de informática, suporte direto e materiais extras de estudo.
                     </p>

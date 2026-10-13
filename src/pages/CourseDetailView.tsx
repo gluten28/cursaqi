@@ -166,7 +166,7 @@ export default function CourseDetailView({
                     id="course-resume-learning"
                   >
                     <PlayCircle className="h-4.5 w-4.5" />
-                    <span>Estudar Agora (Ver Vídeos & Responder Quizzes)</span>
+                    <span>Estudar Agora (Ver Vídeos e Responder Quizzes)</span>
                   </button>
                 ) : isPaidCourse ? (
                   (() => {
@@ -414,10 +414,10 @@ export default function CourseDetailView({
             <div className="bg-white border border-slate-200 p-6 rounded-sm text-xs text-slate-555 space-y-3" id="physical-certificate-promo-panel">
               <h4 className="font-mono font-bold uppercase tracking-wider text-[#0a2540] text-[10px] flex items-center gap-1.5">
                 <Award className="h-4 w-4 text-[#0d9488]" />
-                Direito a Certificado Físico
+                Direito a Certificado de Participação Físico
               </h4>
               <p className="font-sans leading-normal text-[11px] text-slate-600">
-                Ao concluir com sucesso todas as lições deste curso e obter aprovação no Exame Final (aproveitamento mínimo de 80%), você terá direito a receber o seu <strong>certificado de conclusão físico</strong> do curso ministrado pelo Formador Aldo Valige. O documento será enviado para a morada registada na sua conta.
+                Ao concluir com sucesso todas as lições deste curso e obter aprovação no Exame Final (aproveitamento mínimo de 80%), você terá direito a receber o seu <strong>certificado de participação físico na plataforma</strong> ministrado pelo Formador Aldo Valige. O documento é de frequência e participação na plataforma (não aplicável como anexo em concursos de vaga de emprego).
               </p>
             </div>
 

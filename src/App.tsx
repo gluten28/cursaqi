@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import Header from "./components/Header";
-import Hero from "./components/Hero";
+import Sidebar from "./components/Sidebar";
 import Categories from "./components/Categories";
 import CtaBanners from "./components/CtaBanners";
 import CourseCard from "./components/CourseCard";
-import BannerCarousel from "./components/BannerCarousel";
+import HomeWelcomeCard from "./components/HomeWelcomeCard";
+import ScrollFollowingAds from "./components/ScrollFollowingAds";
 import CourseModal from "./components/CourseModal";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AuthScreen from "./pages/AuthScreen";
 import CertificateModal from "./components/CertificateModal";
+import CommunityView from "./pages/CommunityView";
 
 // Modular Student Subviews Layout Components
 import AboutView from "./pages/AboutView";
@@ -68,7 +69,7 @@ import {
 } from "./supabase";
 import { initialCourses, initialCategories, initialVideos, initialQuizzes, initialMaterials, initialBanners, initialUsers } from "./data";
 import { Course, Category, CourseVideo, Quiz, PromoBanner, UserProfile, UserProgress, PlatformNotification, DidacticMaterial, PaymentMethod, PaymentTicket, PREMIUM_SUBSCRIPTION_ID, PREMIUM_SUBSCRIPTION_PRICE, PREMIUM_SUBSCRIPTION_DAYS } from "./types";
-import { ArrowUpRight, GraduationCap, Sparkles, Megaphone, User, Lock, Award, ShieldAlert, CheckCircle2, X, Mail, MessageCircle } from "lucide-react";
+import { ArrowUpRight, GraduationCap, Sparkles, Megaphone, User, Lock, Award, ShieldAlert, CheckCircle2, X } from "lucide-react";
 
 export default function App() {
   // Core data banks
@@ -136,35 +137,52 @@ export default function App() {
   const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
   const [activeToasts, setActiveToasts] = useState<PlatformNotification[]>([]);
 
-  // Helper trigger for all 17 custom illustrated action events
-  const triggerPlatformNotification = (type: string, title?: string, message?: string) => {
+  // Show animated toast alert WITHOUT counting as an unread notification
+  const showToast = (type: string, title?: string, message?: string) => {
     const actionMatch = MAPPED_ACTIONS.find(a => a.id === type);
-    if (!actionMatch) return;
-
-    const newN: PlatformNotification = {
-      id: "notification-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+    const toastItem: PlatformNotification = {
+      id: "toast-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
       type: type,
-      title: title || actionMatch.defaultTitle,
-      message: message || actionMatch.defaultMessage,
-      imageUrl: actionMatch.imageUrl,
+      title: title || actionMatch?.defaultTitle || "Aviso",
+      message: message || actionMatch?.defaultMessage || "",
+      imageUrl: actionMatch?.imageUrl || "https://ik.imagekit.io/mdsiwq57o/CursaQI/accoes/com_energia.png",
       timestamp: new Date().toLocaleTimeString("pt-PT").slice(0, 5) + " • " + new Date().toLocaleDateString("pt-PT"),
-      read: false
+      read: true // Marked as read so it NEVER counts in unread notification badge!
     };
+    setActiveToasts(prev => [...prev, toastItem]);
+  };
 
-    setNotifications(prev => {
-      const updated = [newN, ...prev];
-      localStorage.setItem("cursaqi_notifications", JSON.stringify(updated));
-      return updated;
-    });
+  // Helper trigger for action events.
+  // Action events ONLY display a visual toast and are NOT saved as unread notifications
+  const triggerPlatformNotification = (type: string, title?: string, message?: string, saveToInbox: boolean = false) => {
+    // 1. Always display the animated toast alert for visual feedback
+    showToast(type, title, message);
 
-    if (currentUser) {
-      dbSaveNotification(newN, currentUser.email).catch(err => {
-        console.error("Error saving notification to DB:", err);
+    // 2. Only add to persistent notification center if explicitly requested
+    if (saveToInbox) {
+      const actionMatch = MAPPED_ACTIONS.find(a => a.id === type);
+      const newN: PlatformNotification = {
+        id: "notification-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+        type: type,
+        title: title || actionMatch?.defaultTitle || "Notificação",
+        message: message || actionMatch?.defaultMessage || "",
+        imageUrl: actionMatch?.imageUrl || "https://ik.imagekit.io/mdsiwq57o/CursaQI/accoes/com_energia.png",
+        timestamp: new Date().toLocaleTimeString("pt-PT").slice(0, 5) + " • " + new Date().toLocaleDateString("pt-PT"),
+        read: false
+      };
+
+      setNotifications(prev => {
+        const updated = [newN, ...prev];
+        localStorage.setItem("cursaqi_notifications", JSON.stringify(updated));
+        return updated;
       });
-    }
 
-    // Spawn animated toast alert
-    setActiveToasts(prev => [...prev, newN]);
+      if (currentUser) {
+        dbSaveNotification(newN, currentUser.email).catch(err => {
+          console.error("Error saving notification to DB:", err);
+        });
+      }
+    }
   };
 
   const handleDismissToast = (id: string) => {
@@ -1013,10 +1031,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-between font-sans selection:bg-[#0d9488]/20" id="cursaqi-react-root">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row font-sans selection:bg-[#0d9488]/20" id="cursaqi-react-root">
       
-      {/* Universal Header with responsive switches */}
-      <Header
+      {/* Universal Sidebar Navigation */}
+      <Sidebar
         currentView={currentView}
         onViewChange={(view) => {
           handleCloseCourse();
@@ -1043,20 +1061,8 @@ export default function App() {
             }
           }
         }}
-        searchQuery={searchQuery}
-        onSearchChange={(query) => {
-          setSearchQuery(query);
-          setSelectedCourse(null);
-          setActiveCertificate(null);
-          setIsStudying(false);
-          // Only redirect to courses page when there's an actual search query
-          // Clearing the search (empty string) must NOT override the current view
-          if (query.trim()) {
-            setCurrentView("courses");
-          }
-        }}
         wishlistCount={currentUser?.favorites?.length || 0}
-        userEmail={currentUser ? `${currentUser.fullName} (${currentUser.role === "admin" ? "Admin" : "Estudante"})` : undefined}
+        currentUser={currentUser}
         isAdmin={currentUser?.role === "admin"}
         onLogout={handleLogout}
         onLoginClick={() => {
@@ -1076,31 +1082,24 @@ export default function App() {
         onShareSite={handleShareSite}
       />
 
-      {/* Notification drawer component with simulator */}
-      <NotificationCenter
-        notifications={notifications}
-        onTriggerNotification={triggerPlatformNotification}
-        onClearNotifications={handleClearNotifications}
-        onMarkAllRead={handleMarkAllNotificationsRead}
-        isOpen={isNotificationOpen}
-        onClose={() => setIsNotificationOpen(false)}
-      />
+      {/* Main Content Area - with left margin offset on desktop */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-72 justify-between min-h-screen">
 
-      {/* Animated Toasts Container rendering */}
-      <ToastContainer
-        toasts={activeToasts}
-        onDismissToast={handleDismissToast}
-      />
-
-      {/* Banner Carousel (Sliding Images) - Appears directly below the header/menu on all content pages */}
-      {currentView !== "admin" && currentView !== "auth" && !isStudying && !activeCertificate && (
-        <BannerCarousel
-          banners={banners}
-          courses={courses}
-          onActionClick={handleScrollToCourses}
-          onCourseClick={(course) => handleOpenCourse(course)}
+        {/* Notification drawer component with simulator */}
+        <NotificationCenter
+          notifications={notifications}
+          onTriggerNotification={triggerPlatformNotification}
+          onClearNotifications={handleClearNotifications}
+          onMarkAllRead={handleMarkAllNotificationsRead}
+          isOpen={isNotificationOpen}
+          onClose={() => setIsNotificationOpen(false)}
         />
-      )}
+
+        {/* Animated Toasts Container rendering */}
+        <ToastContainer
+          toasts={activeToasts}
+          onDismissToast={handleDismissToast}
+        />
 
       {/* Primary Context Navigation view Switcher */}
       {activeCertificate ? (
@@ -1194,7 +1193,22 @@ export default function App() {
         </main>
       ) : currentView === "about" ? (
         <main className="flex-1" id="main-about">
-          <AboutView />
+          <AboutView
+            courses={courses}
+            videos={videos}
+            categories={categories}
+            materials={allMaterials}
+          />
+        </main>
+      ) : currentView === "community" ? (
+        <main className="flex-1" id="main-community">
+          <CommunityView
+            currentUser={currentUser}
+            onRequireAuth={() => {
+              setAuthScreenMode("login");
+              setCurrentView("auth");
+            }}
+          />
         </main>
       ) : currentView === "courses" ? (
         <main className="flex-1" id="main-courses-catalog">
@@ -1289,184 +1303,157 @@ export default function App() {
             currentUser={currentUser}
           />
         </main>
-      ) : (currentView === "home" || currentView === "dashboard") && currentUser ? (
-        /* Academic Summary Homepage dashboard for logged-in students */
-        <main className="flex-1" id="main-home-student-dashboard">
-          <HomeDashboardView
-            user={currentUser}
-            courses={courses}
-            videos={videos}
-            onViewCourseDetails={(c) => {
-              handleOpenCourse(c);
-            }}
-            onNavigateToView={(view) => {
-              setCurrentView(view);
-            }}
-            onOpenStudyModal={(c) => {
-              handleOpenCourse(c);
-              setIsStudying(true);
-            }}
-          />
-        </main>
       ) : (
-        /* Default visitor landing experience loaded for tourists/guests */
-        <main className="flex-1 flex flex-col" id="main-home-visitor-explorer">
+        /* Unified Home Page Layout (Welcome Card on Left + Scroll-Following Ads on Right) */
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 mt-5 mb-12" id="main-home-layout">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+            
+            {/* Left Column (8 cols): Single Welcome Card at top, then Student Dashboard or Visitor Catalog */}
+            <div className="lg:col-span-8 flex flex-col space-y-8 min-w-0">
+              {/* Exactly 1 Welcome Card */}
+              <HomeWelcomeCard
+                currentUser={currentUser}
+                courses={courses}
+                onExploreCourses={handleScrollToCourses}
+                onCourseClick={(course) => handleOpenCourse(course)}
+                onRegisterClick={() => {
+                  setAuthScreenMode("register");
+                  setCurrentView("auth");
+                }}
+                onLoginClick={() => {
+                  setAuthScreenMode("login");
+                  setCurrentView("auth");
+                }}
+                onNavigateToView={(view) => setCurrentView(view)}
+              />
 
-
-          {/* Hero section */}
-          <Hero onStartLearningClick={handleScrollToCourses} coursesCount={courses.length} />
-
-          {/* Categories bar with interactive filter */}
-          <Categories
-            categories={categories}
-            selectedCategoryId={selectedCategoryId}
-            onSelectCategory={(id) => {
-              setSelectedCategoryId(id);
-              handleScrollToCourses();
-            }}
-          />
-
-          {/* Banner structures */}
-          <CtaBanners
-            onLearnMoreLeft={handleScrollToCourses}
-            onLearnMoreRight={handleScrollToCourses}
-          />
-
-          {/* Popular Courses Section for Guests */}
-          <section className="bg-white px-4 md:px-8 scroll-mt-20" style={{ padding: "40px 16px" }} id="popular-courses-anchor">
-            <div className="w-full max-w-7xl mx-auto" id="popular-courses-container">
-              
-              {/* Heading with layout actions */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-10" id="popular-courses-header">
-                <div className="text-left py-1" id="popular-courses-heading-wrap">
-                  <h3 className="font-display text-2xl md:text-3.5xl font-bold text-[#0a2540] tracking-tight" id="courses-sec-title">
-                    Cursos Disponíveis
-                  </h3>
-                  <div className="w-12 h-[3px] bg-[#0d9488] mt-2 mb-3" />
-                  <p className="text-xs text-slate-500 font-sans" id="courses-sec-byline">
-                    Cursos práticos de Informática, redes e programação criados pelo Formador Aldo Valige.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2.5" id="popular-courses-right-actions">
-                  {currentUser && (
-                    <button
-                      onClick={() => setCurrentView("home")}
-                      className="bg-[#0a2540] text-white text-xs font-bold uppercase tracking-wider py-2 px-4 rounded-sm cursor-pointer hover:bg-slate-800 transition-colors"
-                    >
-                      Ver Meu Painel ({currentUser.fullName})
-                    </button>
-                  )}
-                  
-                  {selectedCategoryId && (
-                    <span className="text-[10px] bg-[#0d9488]/10 text-[#0d9488] px-2.5 py-1.5 rounded-sm font-mono uppercase font-bold">
-                      Filtro: {selectedCategoryId}
-                    </span>
-                  )}
-                  
-                  <button
-                    onClick={() => {
-                      setSelectedCategoryId(null);
-                      setSearchQuery("");
+              {/* Page Content: Student Dashboard OR Visitor Explorer */}
+              {currentUser ? (
+                <HomeDashboardView
+                  user={currentUser}
+                  courses={courses}
+                  videos={videos}
+                  onViewCourseDetails={(c) => {
+                    handleOpenCourse(c);
+                  }}
+                  onNavigateToView={(view) => {
+                    setCurrentView(view);
+                  }}
+                  onOpenStudyModal={(c) => {
+                    handleOpenCourse(c);
+                    setIsStudying(true);
+                  }}
+                />
+              ) : (
+                <div className="space-y-8" id="visitor-explorer-body">
+                  {/* Categories bar with interactive filter */}
+                  <Categories
+                    categories={categories}
+                    selectedCategoryId={selectedCategoryId}
+                    onSelectCategory={(id) => {
+                      setSelectedCategoryId(id);
+                      handleScrollToCourses();
                     }}
-                    className="border border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 transition-colors px-4 py-2 text-xs font-semibold tracking-wider uppercase rounded-sm cursor-pointer font-sans"
-                    id="view-all-courses-btn"
-                  >
-                    Mostrar Todos
-                  </button>
-                </div>
-              </div>
-
-              {/* Course Card Grid */}
-              <div 
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8" 
-                id="popular-courses-grid"
-              >
-                {filteredCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    isWishlisted={!!currentUser?.favorites?.includes(course.id)}
-                    onToggleWishlist={handleToggleWishlist}
-                    onViewDetails={handleOpenCourse}
-                    onShare={handleShareCourse}
                   />
-                ))}
 
-                {filteredCourses.length === 0 && (
-                  <div className="col-span-full py-16 bg-slate-50 border border-slate-100 rounded-sm text-center" id="courses-empty-card">
-                    <GraduationCap className="h-10 w-10 text-slate-400 mx-auto mb-3" />
-                    <h4 className="font-semibold text-slate-700 text-sm">Nenhum curso coincide com os termos de busca</h4>
-                    <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-                      Atualize seu termo de busca nas categorias de ensino ou acesse o painel para verificar cadastros.
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSelectedCategoryId(null);
-                        setSearchQuery("");
-                      }}
-                      className="mt-4 px-4 py-2 border border-[#0d9488] text-[#0d9488] text-xs font-semibold tracking-wide uppercase hover:bg-teal-50 rounded-sm transition-colors cursor-pointer"
-                    >
-                      Limpar Filtros Gerais
-                    </button>
-                  </div>
-                )}
-              </div>
+                  {/* Banner structures */}
+                  <CtaBanners
+                    onLearnMoreLeft={handleScrollToCourses}
+                    onLearnMoreRight={handleScrollToCourses}
+                  />
 
+                  {/* Popular Courses Section for Guests */}
+                  <section className="bg-white px-6 py-8 rounded-2xl border border-slate-200/90 shadow-2xs scroll-mt-20" id="popular-courses-anchor">
+                    <div className="w-full" id="popular-courses-container">
+                      
+                      {/* Heading with layout actions */}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-8" id="popular-courses-header">
+                        <div className="text-left py-1" id="popular-courses-heading-wrap">
+                          <h3 className="font-display text-2xl md:text-3xl font-bold text-[#0a2540] tracking-tight" id="courses-sec-title">
+                            Cursos Disponíveis
+                          </h3>
+                          <div className="w-12 h-[3px] bg-[#0d9488] mt-2 mb-3" />
+                          <p className="text-xs text-slate-500 font-sans" id="courses-sec-byline">
+                            Cursos práticos de Informática, redes e programação criados pelo Formador Aldo Valige.
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2.5" id="popular-courses-right-actions">
+                          {selectedCategoryId && (
+                            <span className="text-[10px] bg-[#0d9488]/10 text-[#0d9488] px-2.5 py-1.5 rounded-sm font-mono uppercase font-bold">
+                              Filtro: {selectedCategoryId}
+                            </span>
+                          )}
+                          
+                          <button
+                            onClick={() => {
+                              setSelectedCategoryId(null);
+                              setSearchQuery("");
+                            }}
+                            className="border border-slate-200 hover:border-slate-800 text-slate-700 hover:text-slate-900 transition-colors px-4 py-2 text-xs font-semibold tracking-wider uppercase rounded-sm cursor-pointer font-sans"
+                            id="view-all-courses-btn"
+                          >
+                            Mostrar Todos
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Course Card Grid: 1 col on mobile, 2 cols on medium, 2-3 cols inside the 8-col desktop layout */}
+                      <div 
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6" 
+                        id="popular-courses-grid"
+                      >
+                        {filteredCourses.map((course) => (
+                          <CourseCard
+                            key={course.id}
+                            course={course}
+                            isWishlisted={!!currentUser?.favorites?.includes(course.id)}
+                            onToggleWishlist={handleToggleWishlist}
+                            onViewDetails={handleOpenCourse}
+                            onShare={handleShareCourse}
+                          />
+                        ))}
+
+                        {filteredCourses.length === 0 && (
+                          <div className="col-span-full py-16 bg-slate-50 border border-slate-100 rounded-sm text-center" id="courses-empty-card">
+                            <GraduationCap className="h-10 w-10 text-slate-400 mx-auto mb-3" />
+                            <h4 className="font-semibold text-slate-700 text-sm">Nenhum curso coincide com os termos de busca</h4>
+                            <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                              Atualize seu termo de busca nas categorias de ensino ou acesse o painel para verificar cadastros.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setSelectedCategoryId(null);
+                                setSearchQuery("");
+                              }}
+                              className="mt-4 px-4 py-2 border border-[#0d9488] text-[#0d9488] text-xs font-semibold tracking-wide uppercase hover:bg-teal-50 rounded-sm transition-colors cursor-pointer"
+                            >
+                              Limpar Filtros Gerais
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  </section>
+                </div>
+              )}
             </div>
-          </section>
+
+            {/* Right Column (4 cols): Scroll Following Ads Card that moves up and down on scroll */}
+            <div className="lg:col-span-4 w-full h-full relative">
+              <ScrollFollowingAds
+                banners={banners}
+                courses={courses}
+                onExploreCourses={handleScrollToCourses}
+                onCourseClick={(course) => handleOpenCourse(course)}
+              />
+            </div>
+
+          </div>
         </main>
       )}
-
-      {/* Monochromatic styled educational footer (centralized layout) */}
-      <footer className="w-full bg-[#0a2540] border-t border-slate-800 text-white text-center font-sans py-10 px-4" id="cursaqi-footer">
-        <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4" id="footer-centered-container">
-          {/* Logo with name */}
-          <div className="flex items-center gap-2 justify-center" id="footer-logo-row">
-            <img 
-              src="https://ik.imagekit.io/mdsiwq57o/CursaQI/Logotipo.png" 
-              alt="CursaQi" 
-              className="h-10 w-10 rounded-full object-cover border border-slate-800 shrink-0" 
-              referrerPolicy="no-referrer"
-            />
-            <span className="font-display text-lg font-bold tracking-tight uppercase">
-              CUrsaQi
-            </span>
-          </div>
-          
-          {/* Description */}
-          <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed" id="footer-tagline">
-            Plataforma de cursos online criada pelo Formador Aldo Valige com cursos gratuitos e à venda para quem quer aprender Informática e Tecnologia.
-          </p>
-
-          {/* Contact Information */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-xs text-slate-300 mt-2">
-            <a href="mailto:infotechvalige@proton.me" className="flex items-center gap-2 hover:text-[#0d9488] transition-colors">
-              <Mail className="h-4 w-4 text-[#0d9488]" />
-              <span>Suporte: infotechvalige@proton.me</span>
-            </a>
-            <a href="https://wa.me/258873308934" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#0d9488] transition-colors">
-              <MessageCircle className="h-4 w-4 text-[#0d9488]" />
-              <span>WhatsApp: +258873308934</span>
-            </a>
-            <a href="https://tiktok.com/@smartcodai" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#0d9488] transition-colors">
-              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-[#0d9488]" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
-              </svg>
-              <span>TikTok: tiktok.com/smartcodai</span>
-            </a>
-          </div>
-          
-          {/* Separation line */}
-          <div className="w-12 h-[1px] bg-slate-800 my-1" />
-
-          {/* Rights reserved */}
-          <div className="text-[10px] uppercase tracking-wider text-slate-500 font-mono space-y-1">
-            <div>© 2026 CURSAQI. Todos os direitos reservados.</div>
-            <div className="text-[9px] text-slate-500">CURSOS ONLINE DE INFORMÁTICA // FORMADOR ALDO VALIGE</div>
-          </div>
-        </div>
-      </footer>
+      </div>
 
       {/* Cookie Consent Verification Banner Layout */}
       {cookiePreference === null && (

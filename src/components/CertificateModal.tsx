@@ -45,12 +45,12 @@ export default function CertificateModal({
         </div>
 
         {/* Anti-fraud / Regulatory status notice banner */}
-        <div className="mb-6 bg-slate-100 border-l-4 border-slate-600 text-slate-800 p-4 rounded-sm text-xs leading-relaxed font-sans flex items-start gap-3 shadow-xs" id="cert-regulatory-notice">
-          <ShieldAlert className="h-5 w-5 text-slate-700 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 bg-amber-50 border-l-4 border-amber-600 text-slate-850 p-4 rounded-sm text-xs leading-relaxed font-sans flex items-start gap-3 shadow-xs" id="cert-regulatory-notice">
+          <ShieldAlert className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <span className="font-extrabold text-slate-950 uppercase tracking-widest text-[10px] block">Aviso de Isenção Regulamentar</span>
-            <p className="text-slate-600 text-[11px]">
-              <strong>Nota Importante:</strong> O certificado disponibilizado abaixo destina-se unicamente a fins de reconhecimento de conclusão de curso livre de informática ministrado pelo Formador Aldo Valige. <strong>Este certificado não concede grau acadêmico nem qualificação profissional regulamentada</strong>, sendo um comprovativo prático de frequência e aproveitamento nos conteúdos lecionados na plataforma CUrsaQi.
+            <span className="font-extrabold text-amber-950 uppercase tracking-widest text-[10px] block">Aviso Importante • Finalidade do Certificado</span>
+            <p className="text-slate-700 text-[11.5px] leading-relaxed">
+              <strong>Nota Obrigatória:</strong> Este certificado é <strong>somente de participação na plataforma CUrsaQi</strong> e aproveitamento prático nos conteúdos lecionados pelo Formador Aldo Valige. <strong>Não concede grau acadêmico nem qualificação profissional regulamentada e NÃO pode ser usado como anexo em concursos de vaga de emprego</strong> ou processos públicos seletivos.
             </p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function CertificateModal({
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[#0d9488]" />
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold">
-              Certificado de Conclusão de Curso // ID: {certificateId}
+              Certificado de Participação na Plataforma // ID: {certificateId}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function CertificateModal({
                 </span>
               </div>
               <div className="text-[10px] font-mono tracking-widest text-[#0d9488] font-bold uppercase">
-                CERTIFICADO DE CONCLUSÃO DE CURSO LIVRE
+                CERTIFICADO DE PARTICIPAÇÃO NA PLATAFORMA
               </div>
               <div className="w-16 h-[2px] bg-[#0d9488] mx-auto mt-2" />
             </div>
@@ -122,7 +122,7 @@ export default function CertificateModal({
             {/* Central credential statement */}
             <div className="my-6 space-y-4">
               <p className="font-serif italic text-xs text-slate-500">
-                Certificamos, para fins de comprovação de estudo e conclusão de curso livre, que o(a) estudante
+                Certificamos, para fins de participação na plataforma e frequência em curso livre prático, que o(a) estudante
               </p>
               
               <h3 className="font-display text-2xl md:text-3xl font-extrabold text-[#0a2540] tracking-tight py-1 border-b border-slate-100 max-w-md mx-auto">
@@ -226,8 +226,8 @@ export default function CertificateModal({
             </div>
 
             {/* Legal warning disclaimer note required to establish proper completion statement */}
-            <div className="text-[7px] text-slate-400 font-sans border-t border-slate-100 pt-3 leading-tight select-none mt-4 text-center">
-              Nota de Isenção Regulamentar: Este documento constitui um registo de demonstração de aproveitamento prático em curso livre. Não possui valor oficial ou legal, não foi homologado ou validado por Ministérios da Educação ou entidades reguladoras de ensino, e não possui reconhecimento de competência por autoridades profissionais ou entidades externas responsáveis.
+            <div className="text-[7.5px] text-slate-400 font-sans border-t border-slate-100 pt-3 leading-tight select-none mt-4 text-center">
+              Nota de Isenção Regulamentar: Este certificado é somente de participação na plataforma CUrsaQi e comprovação de aproveitamento prático em curso livre. Não possui valor acadêmico nem homologação governamental, e não pode ser usado como anexo em concursos de vaga de emprego ou seleções profissionais regulamentadas.
             </div>
           </div>
         </div>
@@ -236,17 +236,17 @@ export default function CertificateModal({
         <div className="p-6 bg-teal-50 border-t border-b border-slate-200 text-left space-y-2 font-sans" id="physical-certificate-claim-banner">
           <h4 className="text-xs font-extrabold text-[#0a2540] uppercase tracking-wider flex items-center gap-1.5">
             <Award className="h-4.5 w-4.5 text-[#0d9488]" />
-            Seu Certificado de Participação Físico está Disponível!
+            Seu Certificado de Participação Físico na Plataforma
           </h4>
           <p className="text-xs text-slate-650 leading-relaxed">
-            Parabéns pela sua graduação no curso <strong>{course.title}</strong>! Como aluno concluinte com aproveitamento regulamentar, você tem direito a receber o seu <strong>certificado de participação físico oficial</strong>, impresso em papel timbrado institucional de alta qualidade com selo em relevo e assinado pela Direcção Pedagógica.
+            Parabéns pela sua dedicação no curso <strong>{course.title}</strong>! Como aluno concluinte com aproveitamento regulamentar, você tem direito a receber o seu <strong>certificado de participação físico na plataforma</strong>, impresso em papel timbrado institucional de alta qualidade com selo em relevo e assinado pela Direção Pedagógica (documento de participação na plataforma; não utilizável como anexo em concursos de vaga de emprego).
           </p>
           <div className="bg-white p-4 border border-slate-200 rounded-sm mt-3 text-xs text-slate-600 space-y-1.5 max-w-xl">
             <span className="block font-bold text-slate-700 text-[11px] uppercase tracking-wider">Dados de Envio Postal Registados:</span>
             <span className="block"><strong>Destinatário:</strong> {user.fullName}</span>
             <span className="block"><strong>Morada para Envio:</strong> {user.address || "Endereço não cadastrado no perfil."}</span>
             <span className="block text-slate-400 mt-2 text-[10px]">
-              * Nota: O envio é totalmente gratuito. Se precisar de atualizar a sua morada de envio ou pretender o envio urgente via transportadora parceira, aceda ao seu Perfil ou contacte-nos directamente pelo canal WhatsApp do Orientador.
+              * Nota: O envio é totalmente gratuito. Se precisar de atualizar a sua morada de envio ou pretender o envio urgente via transportadora parceira, aceda ao seu Perfil ou contacte-nos directamente pelo canal de suporte FalaQI.
             </span>
           </div>
         </div>
