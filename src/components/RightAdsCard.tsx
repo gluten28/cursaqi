@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, MessageCircle, CheckCircle2, ChevronRight, ExternalLink } from "lucide-react";
 import { Course, PromoBanner } from "../types";
 
 interface RightAdsCardProps {
@@ -22,39 +21,6 @@ interface AdItem {
   tagColor: string;
 }
 
-const DEFAULT_ADS: AdItem[] = [
-  {
-    id: "ad-whatsapp-vip",
-    badge: "OFERTA EXCLUSIVA",
-    title: "Aprenda Informática e Programação do Zero",
-    subtitle: "Atendimento personalizado e suporte direto com o Formador Aldo Valige no WhatsApp.",
-    imageUrl: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=720&auto=format&fit=crop",
-    buttonText: "Falar no WhatsApp",
-    actionType: "whatsapp",
-    tagColor: "bg-[#25D366] text-white"
-  },
-  {
-    id: "ad-certificados",
-    badge: "CERTIFICADO INCLUSO",
-    title: "Qualifique o Seu Currículo Profissional",
-    subtitle: "Conclua aulas práticas, realize o exame final e emita o seu certificado oficial.",
-    imageUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=720&auto=format&fit=crop",
-    buttonText: "Ver Todos os Cursos",
-    actionType: "catalog",
-    tagColor: "bg-[#0d9488] text-white"
-  },
-  {
-    id: "ad-redes-dev",
-    badge: "NOVO MÓDULO",
-    title: "Redes de Computadores e Segurança Prática",
-    subtitle: "Formação técnica completa e direta ao ponto para o mercado de trabalho em Moçambique.",
-    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=720&auto=format&fit=crop",
-    buttonText: "Explorar Programa",
-    actionType: "catalog",
-    tagColor: "bg-[#0a2540] text-teal-300 border border-teal-500/30"
-  }
-];
-
 export default function RightAdsCard({ 
   onExploreCourses, 
   onCourseClick, 
@@ -63,33 +29,33 @@ export default function RightAdsCard({
 }: RightAdsCardProps) {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
 
-  // Map active banners from Admin panel into AdItem format, or fallback to defaults
+  // Map active banners strictly from what is stored in the database (NO mock fallbacks)
   const activeBanners = (banners || []).filter(b => b.isActive);
-  const adsList: AdItem[] = activeBanners.length > 0
-    ? activeBanners.map((b, idx) => {
-        let actionType: "whatsapp" | "course" | "link" | "catalog" = "catalog";
-        if (b.linkUrl && b.linkUrl.trim()) {
-          actionType = "link";
-        } else if (b.courseId) {
-          actionType = "course";
-        } else if (b.buttonText.toLowerCase().includes("whatsapp")) {
-          actionType = "whatsapp";
-        }
+  const sourceBanners = activeBanners.length > 0 ? activeBanners : (banners || []);
 
-        return {
-          id: b.id,
-          badge: b.linkUrl ? "LINK OFICIAL" : (b.courseId ? "CURSO EM DESTAQUE" : "ANÚNCIO OFICIAL"),
-          title: b.title,
-          subtitle: b.subtitle,
-          imageUrl: b.imageUrl || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=720&auto=format&fit=crop",
-          buttonText: b.buttonText || "Saber Mais",
-          actionType,
-          targetCourseId: b.courseId,
-          targetLinkUrl: b.linkUrl,
-          tagColor: idx % 2 === 0 ? "bg-[#0d9488] text-white" : "bg-[#25D366] text-white"
-        };
-      })
-    : DEFAULT_ADS;
+  const adsList: AdItem[] = sourceBanners.map((b, idx) => {
+    let actionType: "whatsapp" | "course" | "link" | "catalog" = "catalog";
+    if (b.linkUrl && b.linkUrl.trim()) {
+      actionType = "link";
+    } else if (b.courseId) {
+      actionType = "course";
+    } else if (b.buttonText && b.buttonText.toLowerCase().includes("whatsapp")) {
+      actionType = "whatsapp";
+    }
+
+    return {
+      id: b.id,
+      badge: b.linkUrl ? "LINK OFICIAL" : (b.courseId ? "CURSO EM DESTAQUE" : "ANÚNCIO OFICIAL"),
+      title: b.title,
+      subtitle: b.subtitle || "",
+      imageUrl: b.imageUrl || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=720&auto=format&fit=crop",
+      buttonText: b.buttonText || "Saber Mais",
+      actionType,
+      targetCourseId: b.courseId,
+      targetLinkUrl: b.linkUrl,
+      tagColor: idx % 2 === 0 ? "bg-[#0d9488] text-white" : "bg-[#25D366] text-white"
+    };
+  });
 
   useEffect(() => {
     if (adsList.length <= 1) return;
@@ -99,10 +65,30 @@ export default function RightAdsCard({
     return () => clearInterval(timer);
   }, [adsList.length]);
 
-  const ad = adsList[currentAdIndex] || adsList[0] || DEFAULT_ADS[0];
+  // If no banners are in the database, do NOT show hardcoded fallback mock ads
+  if (adsList.length === 0) {
+    return (
+      <div 
+        className="w-full h-full min-h-[350px] flex flex-col items-center justify-center bg-white border border-slate-200/90 rounded-2xl p-6 text-center shadow-xs"
+        id="cursaqi-right-ads-card-empty"
+      >
+        <span className="text-[10px] font-mono font-bold tracking-widest text-[#0d9488] uppercase block mb-1">
+          Anúncios Oficiais
+        </span>
+        <h4 className="font-display font-bold text-slate-800 text-sm">
+          Nenhum anúncio ativo na base de dados
+        </h4>
+        <p className="text-[11px] text-slate-500 font-sans mt-1 max-w-xs leading-relaxed">
+          Os anúncios e promoções cadastrados pelo administrador no painel serão exibidos aqui em tempo real.
+        </p>
+      </div>
+    );
+  }
+
+  const ad = adsList[currentAdIndex] || adsList[0];
 
   const handleAction = () => {
-    // 1. External link or specific URL configured by admin
+    // 1. External link or specific URL configured in database by admin
     if (ad.targetLinkUrl && ad.targetLinkUrl.trim()) {
       let target = ad.targetLinkUrl.trim();
       if (!target.startsWith("http://") && !target.startsWith("https://") && !target.startsWith("//")) {
@@ -133,7 +119,7 @@ export default function RightAdsCard({
       return;
     }
 
-    // 4. Default fallback: explore courses
+    // 4. Default: explore courses
     if (onExploreCourses) {
       onExploreCourses();
     }
@@ -144,7 +130,7 @@ export default function RightAdsCard({
       className="w-full h-full flex flex-col bg-[#061528] rounded-2xl border border-slate-800 shadow-xl overflow-hidden group transition-all duration-300 hover:border-teal-500/40"
       id="cursaqi-right-ads-card"
     >
-      {/* Instagram-style Header */}
+      {/* Instagram-style Header without icons */}
       <div className="p-3 bg-[#0a2540]/90 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <div className="relative">
@@ -157,20 +143,17 @@ export default function RightAdsCard({
             <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#0a2540]" />
           </div>
           <div className="flex flex-col text-left min-w-0">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-bold text-white truncate font-sans">cursaqi_oficial</span>
-              <CheckCircle2 className="h-3 w-3 text-teal-400 shrink-0" />
-            </div>
+            <span className="text-xs font-bold text-white truncate font-sans">cursaqi_oficial</span>
             <span className="text-[9px] text-slate-400 font-mono leading-none">Patrocinado • Anúncio</span>
           </div>
         </div>
 
-        <span className={`text-[8px] font-mono uppercase font-bold px-2 py-0.5 rounded-full ${ad.tagColor}`}>
+        <span className={`text-[8.5px] font-mono uppercase font-bold px-2 py-0.5 rounded-full ${ad.tagColor}`}>
           {ad.badge}
         </span>
       </div>
 
-      {/* Visual Image Area (Vertical format: 4:5 / 9:16 Instagram aspect ratio) */}
+      {/* Visual Image Area (Vertical format: 4:5 Instagram aspect ratio) */}
       <div className="relative w-full aspect-[4/5] sm:aspect-[4/4.5] lg:aspect-[4/5] overflow-hidden bg-slate-900">
         <img
           src={ad.imageUrl}
@@ -190,9 +173,9 @@ export default function RightAdsCard({
         </div>
       </div>
 
-      {/* Action CTA Bar */}
+      {/* Action CTA Bar without icons */}
       <div className="p-3 bg-[#0a2540] border-t border-slate-800 flex items-center justify-between gap-2 mt-auto">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {adsList.map((_, idx) => (
             <button
               key={idx}
@@ -207,22 +190,15 @@ export default function RightAdsCard({
 
         <button
           onClick={handleAction}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-md ${
             ad.actionType === "whatsapp"
               ? "bg-[#25D366] hover:bg-[#20ba59] text-white"
               : "bg-[#0d9488] hover:bg-[#0f766e] text-white"
           }`}
         >
-          {ad.actionType === "whatsapp" ? (
-            <MessageCircle className="h-3.5 w-3.5" />
-          ) : ad.actionType === "link" ? (
-            <ExternalLink className="h-3 w-3" />
-          ) : null}
-          <span>{ad.buttonText}</span>
-          {ad.actionType !== "link" && <ArrowRight className="h-3 w-3" />}
+          {ad.buttonText}
         </button>
       </div>
     </div>
   );
 }
-

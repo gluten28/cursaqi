@@ -1,13 +1,4 @@
 import React from "react";
-import { 
-  ArrowRight, 
-  GraduationCap, 
-  BookOpen, 
-  Award, 
-  Users, 
-  CheckCircle2, 
-  MessageCircle 
-} from "lucide-react";
 import { Course, UserProfile } from "../types";
 
 interface HomeWelcomeCardProps {
@@ -35,18 +26,21 @@ export default function HomeWelcomeCard({
 
   return (
     <div 
-      className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 flex flex-col justify-between text-left transition-all relative overflow-hidden group"
+      className="w-full bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 flex flex-col justify-between text-left transition-all relative overflow-hidden group"
       id="home-welcome-single-card"
     >
       {/* Background subtle gradient accents */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-teal-50/80 via-emerald-50/40 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-teal-50/80 via-emerald-50/30 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
       
-      {/* Top Area: Title and Description (No badge as requested) */}
-      <div className="relative space-y-4">
+      {/* Top Area: Title and Description */}
+      <div className="relative space-y-5">
         {currentUser ? (
           // Logged-in greeting
           <div className="space-y-2">
-            <h1 className="font-display font-black text-2xl sm:text-3.5xl text-[#0a2540] tracking-tight leading-tight">
+            <span className="inline-block text-[10px] font-mono font-bold uppercase tracking-wider text-[#0d9488] bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200/60">
+              Painel do Aluno
+            </span>
+            <h1 className="font-display font-black text-2xl sm:text-3xl text-[#0a2540] tracking-tight leading-tight">
               Bem-vindo de volta, <span className="text-[#0d9488]">{currentUser.fullName}</span>!
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed max-w-2xl">
@@ -54,122 +48,132 @@ export default function HomeWelcomeCard({
             </p>
           </div>
         ) : (
-          // Guest / Visitor greeting
-          <div className="space-y-2">
-            <h1 className="font-display font-black text-2xl sm:text-3.5xl text-[#0a2540] tracking-tight leading-tight">
+          // Guest / Visitor landing hero presentation
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2">
+              <span className="text-[10.5px] font-mono font-extrabold uppercase tracking-widest text-[#0d9488] bg-teal-50 px-3 py-1 rounded-md border border-teal-200/70">
+                Plataforma de Ensino Prático de Informática
+              </span>
+            </div>
+
+            <h1 className="font-display font-black text-2xl sm:text-4xl text-[#0a2540] tracking-tight leading-tight">
               Aprenda Informática e Tecnologia <span className="text-[#0d9488]">de Forma Prática</span>
             </h1>
+            
             <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed max-w-2xl">
-              Cursos estruturados passo a passo pelo Formador Aldo Valige. Aprenda hardware, redes, sistemas e programação com aulas gravadas em vídeo, questionários práticos e certificado de participação na plataforma.
+              Cursos estruturados passo a passo pelo Formador Aldo Valige. Domine hardware, redes de computadores, sistemas e programação com aulas gravadas em vídeo, questionários práticos e emissão de certificado de participação na plataforma.
             </p>
           </div>
         )}
 
-        {/* Highlights Feature Badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-          <div className="p-2.5 bg-slate-50 border border-slate-150 rounded-xl flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-teal-100/80 text-teal-700 flex items-center justify-center shrink-0">
-              <BookOpen className="h-4 w-4" />
-            </div>
-            <div className="text-left min-w-0">
-              <span className="block text-[11px] font-bold text-slate-800 truncate">Aulas em Vídeo</span>
-              <span className="block text-[9.5px] text-slate-500 font-mono">100% Práticas</span>
-            </div>
+        {/* 4 Feature Pillars (Typography-Driven, Without Emojis or Icons) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+            <span className="block text-[10px] font-mono font-extrabold text-[#0d9488] tracking-widest">
+              01
+            </span>
+            <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
+              Aulas em Vídeo
+            </span>
+            <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
+              100% Práticas
+            </span>
           </div>
 
-          <div className="p-2.5 bg-slate-50 border border-slate-150 rounded-xl flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
-              <Award className="h-4 w-4" />
-            </div>
-            <div className="text-left min-w-0">
-              <span className="block text-[11px] font-bold text-slate-800 truncate">Certificado</span>
-              <span className="block text-[9.5px] text-slate-500 font-mono">Participação</span>
-            </div>
+          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+            <span className="block text-[10px] font-mono font-extrabold text-amber-600 tracking-widest">
+              02
+            </span>
+            <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
+              Certificação
+            </span>
+            <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
+              Participação na Plataforma
+            </span>
           </div>
 
-          <div className="p-2.5 bg-slate-50 border border-slate-150 rounded-xl flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-100/80 text-indigo-700 flex items-center justify-center shrink-0">
-              <Users className="h-4 w-4" />
-            </div>
-            <div className="text-left min-w-0">
-              <span className="block text-[11px] font-bold text-slate-800 truncate">Comunidade</span>
-              <span className="block text-[9.5px] text-slate-500 font-mono">Chat ao Vivo</span>
-            </div>
+          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+            <span className="block text-[10px] font-mono font-extrabold text-indigo-600 tracking-widest">
+              03
+            </span>
+            <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
+              Comunidade QI
+            </span>
+            <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
+              Troca de Ideias ao Vivo
+            </span>
           </div>
 
-          <div className="p-2.5 bg-slate-50 border border-slate-150 rounded-xl flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0">
-              <MessageCircle className="h-4 w-4" />
-            </div>
-            <div className="text-left min-w-0">
-              <span className="block text-[11px] font-bold text-slate-800 truncate">FalaQI</span>
-              <span className="block text-[9.5px] text-slate-500 font-mono">Suporte Direto</span>
-            </div>
+          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+            <span className="block text-[10px] font-mono font-extrabold text-emerald-600 tracking-widest">
+              04
+            </span>
+            <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
+              Suporte FalaQI
+            </span>
+            <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
+              Apoio Pedagógico Direto
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Bottom Actions Row */}
+      {/* Bottom Actions Row (No Icons, Pure Elegant Typography) */}
       <div className="relative pt-6 mt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
         {currentUser ? (
           // Actions for logged-in user
           <>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs font-mono text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                <GraduationCap className="h-4 w-4 text-[#0d9488]" />
-                <span>{totalEnrolled} {totalEnrolled === 1 ? "curso matriculado" : "cursos matriculados"}</span>
-              </div>
+              <span className="text-xs font-mono text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
+                {totalEnrolled} {totalEnrolled === 1 ? "curso matriculado" : "cursos matriculados"}
+              </span>
             </div>
 
             <div className="flex items-center gap-2.5">
               <button
                 onClick={onExploreCourses}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                className="px-4 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
               >
-                <span>Ver Cursos Disponíveis</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                Ver Cursos Disponíveis
               </button>
               {onNavigateToView && (
                 <button
                   onClick={() => onNavigateToView("community")}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                  className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
                 >
-                  <Users className="h-3.5 w-3.5 text-teal-600" />
-                  <span>Comunidade</span>
+                  Comunidade
                 </button>
               )}
             </div>
           </>
         ) : (
-          // Actions for guest/tourist
+          // Actions for visitor / landing page
           <>
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-sans">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Inscrição rápida e acesso imediato aos módulos.</span>
+            <div className="text-xs text-slate-500 font-sans">
+              <span className="font-semibold text-slate-700">Inscrição Imediata:</span> Acesso contínuo aos módulos gravados e materiais de apoio.
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
               <button
                 onClick={onExploreCourses}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+                className="px-5 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
               >
-                <span>Explorar Cursos</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                Explorar Cursos
               </button>
 
               {onRegisterClick && (
                 <button
                   onClick={onRegisterClick}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2.5 bg-[#0a2540] hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
                 >
-                  <span>Criar Conta</span>
+                  Criar Conta
                 </button>
               )}
 
               {onNavigateToView && (
                 <button
                   onClick={() => onNavigateToView("about")}
-                  className="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-2 cursor-pointer transition-colors"
+                  className="px-3 py-2 text-xs text-slate-600 hover:text-slate-900 font-semibold cursor-pointer transition-colors"
                 >
                   Sobre Nós
                 </button>
@@ -181,4 +185,3 @@ export default function HomeWelcomeCard({
     </div>
   );
 }
-

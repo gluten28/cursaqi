@@ -26,31 +26,31 @@ const CATEGORY_CONFIG: Record<Exclude<ChatCategory, "suporte">, { label: string;
     label: "Geral",
     icon: <Sparkles className="h-3.5 w-3.5 text-teal-600" />,
     color: "bg-teal-50 text-teal-800 border-teal-200",
-    badge: "📢 Geral"
+    badge: "Geral"
   },
   pergunta: {
     label: "Dúvidas",
     icon: <HelpCircle className="h-3.5 w-3.5 text-sky-500" />,
     color: "bg-sky-50 text-sky-800 border-sky-200",
-    badge: "❓ Dúvidas"
+    badge: "Dúvidas"
   },
   ideia: {
     label: "Ideias",
     icon: <Lightbulb className="h-3.5 w-3.5 text-amber-500" />,
     color: "bg-amber-50 text-amber-800 border-amber-200",
-    badge: "💡 Ideias"
+    badge: "Ideias"
   },
   sugestao: {
     label: "Sugestões",
     icon: <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />,
     color: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    badge: "💬 Sugestões"
+    badge: "Sugestões"
   },
   ajuda: {
     label: "Ajuda",
     icon: <MessageSquare className="h-3.5 w-3.5 text-rose-500" />,
     color: "bg-rose-50 text-rose-800 border-rose-200",
-    badge: "🆘 Ajuda"
+    badge: "Ajuda"
   }
 };
 
@@ -437,7 +437,7 @@ export default function CommunityView({ currentUser, onRequireAuth }: CommunityV
           </div>
 
           <div className="text-[10px] text-slate-400 text-left">
-            💡 Dica: Respostas e comentários do Formador Aldo Valige aparecerão destacados na cor verde água.
+            Nota: Respostas e comentários do Formador Aldo Valige aparecerão destacados na cor verde água.
           </div>
         </form>
 

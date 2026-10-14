@@ -78,7 +78,14 @@ export default function App() {
   const [videos, setVideos] = useState<CourseVideo[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [allMaterials, setAllMaterials] = useState<DidacticMaterial[]>([]);
-  const [banners, setBanners] = useState<PromoBanner[]>([]);
+  const [banners, setBanners] = useState<PromoBanner[]>(() => {
+    try {
+      const local = localStorage.getItem("cursaqi_banners_v2");
+      return local ? JSON.parse(local) : [];
+    } catch {
+      return [];
+    }
+  });
   const [adminUsers, setAdminUsers] = useState<UserProfile[]>([]);
 
   // Payment states
@@ -1030,60 +1037,150 @@ export default function App() {
     }
   };
 
+  const isLandingPage = (currentView === "home" || currentView === "dashboard") && !currentUser && !selectedCourse && !activeCertificate && !isStudying;
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row font-sans selection:bg-[#0d9488]/20" id="cursaqi-react-root">
       
-      {/* Universal Sidebar Navigation */}
-      <Sidebar
-        currentView={currentView}
-        onViewChange={(view) => {
-          handleCloseCourse();
-          setActiveCertificate(null);
-          
-          const requiresAuth = ["history", "certificates", "profile", "payments"].includes(view);
-          if (requiresAuth && !currentUser) {
-            setAuthScreenMode("login");
-            setCurrentView("auth");
-            return;
-          }
-
-          if (view === "admin") {
-            if (currentUser && currentUser.role === "admin") {
-              setCurrentView("admin");
-            } else {
+      {/* Universal Sidebar Navigation - hidden on public landing page as requested */}
+      {!isLandingPage && (
+        <Sidebar
+          currentView={currentView}
+          onViewChange={(view) => {
+            handleCloseCourse();
+            setActiveCertificate(null);
+            
+            const requiresAuth = ["history", "certificates", "profile", "payments"].includes(view);
+            if (requiresAuth && !currentUser) {
               setAuthScreenMode("login");
               setCurrentView("auth");
+              return;
             }
-          } else {
-            setCurrentView(view);
-            if (typeof window !== "undefined") {
-              window.history.pushState(null, "", view === "home" ? window.location.pathname : `?view=${encodeURIComponent(view)}`);
-            }
-          }
-        }}
-        wishlistCount={currentUser?.favorites?.length || 0}
-        currentUser={currentUser}
-        isAdmin={currentUser?.role === "admin"}
-        onLogout={handleLogout}
-        onLoginClick={() => {
-          handleCloseCourse();
-          setActiveCertificate(null);
-          setAuthScreenMode("login");
-          setCurrentView("auth");
-        }}
-        onRegisterClick={() => {
-          handleCloseCourse();
-          setActiveCertificate(null);
-          setAuthScreenMode("register");
-          setCurrentView("auth");
-        }}
-        unreadNotificationsCount={notifications.filter(n => !n.read).length}
-        onNotificationToggle={() => setIsNotificationOpen(!isNotificationOpen)}
-        onShareSite={handleShareSite}
-      />
 
-      {/* Main Content Area - with left margin offset on desktop */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-72 justify-between min-h-screen">
+            if (view === "admin") {
+              if (currentUser && currentUser.role === "admin") {
+                setCurrentView("admin");
+              } else {
+                setAuthScreenMode("login");
+                setCurrentView("auth");
+              }
+            } else {
+              setCurrentView(view);
+              if (typeof window !== "undefined") {
+                window.history.pushState(null, "", view === "home" ? window.location.pathname : `?view=${encodeURIComponent(view)}`);
+              }
+            }
+          }}
+          wishlistCount={currentUser?.favorites?.length || 0}
+          currentUser={currentUser}
+          isAdmin={currentUser?.role === "admin"}
+          onLogout={handleLogout}
+          onLoginClick={() => {
+            handleCloseCourse();
+            setActiveCertificate(null);
+            setAuthScreenMode("login");
+            setCurrentView("auth");
+          }}
+          onRegisterClick={() => {
+            handleCloseCourse();
+            setActiveCertificate(null);
+            setAuthScreenMode("register");
+            setCurrentView("auth");
+          }}
+          unreadNotificationsCount={notifications.filter(n => !n.read).length}
+          onNotificationToggle={() => setIsNotificationOpen(!isNotificationOpen)}
+          onShareSite={handleShareSite}
+        />
+      )}
+
+      {/* Main Content Area - with left margin offset on desktop (offset removed on landing page) */}
+      <div className={`flex-1 flex flex-col min-w-0 ${isLandingPage ? "" : "lg:pl-72"} justify-between min-h-screen`}>
+
+        {/* Landing Page Top Navigation Bar (when sidebar is hidden on public landing page) */}
+        {isLandingPage && (
+          <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-40 px-4 md:px-8 py-3.5 shadow-2xs" id="landing-page-topbar">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              {/* Brand Logo */}
+              <button 
+                onClick={() => {
+                  setCurrentView("home");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="flex items-center gap-3 cursor-pointer group text-left"
+              >
+                <img
+                  src="https://ik.imagekit.io/mdsiwq57o/CursaQI/Logotipo.png"
+                  alt="CUrsaQi"
+                  className="h-10 w-10 rounded-full object-cover border border-teal-500/40 group-hover:scale-105 transition-transform"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="flex flex-col">
+                  <span className="font-display font-black text-lg tracking-tight uppercase text-slate-900 leading-none">
+                    CUrsaQi
+                  </span>
+                  <span className="text-[9.5px] font-mono uppercase tracking-wider text-teal-600 font-semibold mt-0.5">
+                    Cursos de Informática
+                  </span>
+                </div>
+              </button>
+
+              {/* Navigation Links */}
+              <nav className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider font-sans">
+                <button 
+                  onClick={() => {
+                    setCurrentView("home");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="text-[#0d9488] cursor-pointer"
+                >
+                  Início
+                </button>
+                <button 
+                  onClick={() => {
+                    handleScrollToCourses();
+                  }}
+                  className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
+                >
+                  Cursos
+                </button>
+                <button 
+                  onClick={() => setCurrentView("community")}
+                  className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
+                >
+                  Comunidade
+                </button>
+                <button 
+                  onClick={() => setCurrentView("about")}
+                  className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
+                >
+                  Sobre Nós
+                </button>
+              </nav>
+
+              {/* Auth Actions */}
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => {
+                    setAuthScreenMode("login");
+                    setCurrentView("auth");
+                  }}
+                  className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer font-sans"
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthScreenMode("register");
+                    setCurrentView("auth");
+                  }}
+                  className="px-4 py-2 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer font-sans"
+                >
+                  Criar Conta
+                </button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Notification drawer component with simulator */}
         <NotificationCenter
@@ -1343,19 +1440,10 @@ export default function App() {
                     handleOpenCourse(c);
                     setIsStudying(true);
                   }}
+                  onToggleWishlist={handleToggleWishlist}
                 />
               ) : (
                 <div className="space-y-8" id="visitor-explorer-body">
-                  {/* Categories bar with interactive filter */}
-                  <Categories
-                    categories={categories}
-                    selectedCategoryId={selectedCategoryId}
-                    onSelectCategory={(id) => {
-                      setSelectedCategoryId(id);
-                      handleScrollToCourses();
-                    }}
-                  />
-
                   {/* Banner structures */}
                   <CtaBanners
                     onLearnMoreLeft={handleScrollToCourses}
@@ -1415,11 +1503,13 @@ export default function App() {
                         ))}
 
                         {filteredCourses.length === 0 && (
-                          <div className="col-span-full py-16 bg-slate-50 border border-slate-100 rounded-sm text-center" id="courses-empty-card">
-                            <GraduationCap className="h-10 w-10 text-slate-400 mx-auto mb-3" />
+                          <div className="col-span-full py-16 bg-slate-50 border border-slate-200/80 rounded-2xl text-center space-y-2" id="courses-empty-card">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 block">
+                              Sem Resultados
+                            </span>
                             <h4 className="font-semibold text-slate-700 text-sm">Nenhum curso coincide com os termos de busca</h4>
-                            <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-                              Atualize seu termo de busca nas categorias de ensino ou acesse o painel para verificar cadastros.
+                            <p className="text-xs text-slate-400 max-w-xs mx-auto font-sans">
+                              Atualize o seu termo de busca nas categorias de ensino ou limpe os filtros para visualizar todo o catálogo.
                             </p>
                             <button
                               onClick={() => {

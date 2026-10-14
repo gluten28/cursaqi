@@ -647,7 +647,7 @@ export default function CourseModal({
                       </div>
                       
                       <div className="bg-[#0a2540]/5 p-3.5 border border-slate-200 rounded-sm text-xs text-slate-650 max-w-xl space-y-1">
-                        <div>🎓 <strong>Direito a Certificado Físico:</strong> Ao obter aprovação, você terá direito a receber o seu <strong>certificado de participação físico na plataforma</strong> enviado de forma gratuita à sua residência.</div>
+                        <div><strong>Direito a Certificado Físico:</strong> Ao obter aprovação, você terá direito a receber o seu <strong>certificado de participação físico na plataforma</strong> enviado de forma gratuita à sua residência.</div>
                         <div className="text-[10.5px] text-amber-700 font-sans"><strong>Nota:</strong> O certificado é exclusivamente de participação na plataforma e não pode ser anexado a concursos de vaga de emprego.</div>
                       </div>
 

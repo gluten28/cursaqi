@@ -224,8 +224,37 @@ export async function seedDatabaseIfEmpty() {
 
       console.log("Test accounts successfully seeded to the database!");
     }
+
+    // Ensure promo_banners table has initial ads seeded if empty
+    const { count: bannersCount, error: bannersErr } = await supabase
+      .from("promo_banners")
+      .select("*", { count: "exact", head: true });
+
+    if (!bannersErr && bannersCount === 0) {
+      const initialAds = [
+        {
+          id: "ad-oficial-1",
+          title: "Aprenda Informática e Programação do Zero",
+          subtitle: "Atendimento personalizado e suporte direto com o Formador Aldo Valige no WhatsApp.",
+          button_text: "Falar no WhatsApp",
+          is_active: true,
+          image_url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=720&auto=format&fit=crop",
+          link_url: "https://wa.me/258873308934?text=Ol%C3%A1%20Formador%20Aldo%20Valige!%20Tenho%20interesse%20nos%20cursos%20da%20CUrsaQi."
+        },
+        {
+          id: "ad-oficial-2",
+          title: "Qualifique o Seu Currículo Profissional",
+          subtitle: "Conclua aulas práticas, realize o exame final e emita o seu certificado oficial.",
+          button_text: "Ver Todos os Cursos",
+          is_active: true,
+          image_url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=720&auto=format&fit=crop"
+        }
+      ];
+      await supabase.from("promo_banners").upsert(initialAds);
+      console.log("Initial ads successfully seeded to promo_banners table!");
+    }
   } catch (err) {
-    console.error("Failed to seed database with test accounts:", err);
+    console.error("Failed to seed database with initial records:", err);
   }
 }
 

@@ -1,5 +1,4 @@
 import React from "react";
-import * as Icons from "lucide-react";
 import { Category } from "../types";
 
 interface CategoriesProps {
@@ -8,92 +7,81 @@ interface CategoriesProps {
   onSelectCategory: (id: string | null) => void;
 }
 
-// Map string references safely to Lucide Icon components
-function CategoryIcon({ name, className }: { name: string; className?: string }) {
-  // @ts-ignore
-  const IconComponent = Icons[name];
-  if (!IconComponent) {
-    return <Icons.BookOpen className={className} />;
-  }
-  return <IconComponent className={className} />;
-}
-
 export default function Categories({
   categories,
   selectedCategoryId,
   onSelectCategory,
 }: CategoriesProps) {
   return (
-    <section className="w-full py-10 bg-white border-b border-slate-100 px-4 md:px-8" id="cursaqi-categories-section">
-      <div className="w-full max-w-7xl mx-auto" id="categories-container">
+    <section className="w-full py-8 bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 text-left shadow-2xs" id="cursaqi-categories-section">
+      <div className="w-full" id="categories-container">
         {/* Section Heading */}
-        <div className="text-center mb-10 flex flex-col items-center" id="categories-heading-wrap">
-          <h2 className="font-display text-2xl md:text-3.5xl font-bold text-[#0a2540] tracking-tight animate-fade-in" id="categories-title">
-            Categorias em Destaque
-          </h2>
-          <div className="w-12 h-[3px] bg-[#0d9488] mt-2.5" id="categories-underline-accent" />
-          <p className="text-slate-500 text-sm mt-3.5 font-sans max-w-md" id="categories-description">
-            Filtre instantaneamente os planos de estudo disponíveis clicando abaixo para se especializar nas diferentes áreas técnicas e criativas.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-100 pb-5 mb-6" id="categories-heading-wrap">
+          <div>
+            <span className="text-[10px] font-mono font-bold tracking-widest text-[#0d9488] uppercase block mb-1">
+              Áreas de Formação
+            </span>
+            <h2 className="font-display text-2xl font-bold text-[#0a2540] tracking-tight" id="categories-title">
+              Categorias em Destaque
+            </h2>
+            <p className="text-slate-500 text-xs mt-1 font-sans max-w-xl" id="categories-description">
+              Selecione uma especialidade abaixo para filtrar os cursos disponíveis e direcionar a sua aprendizagem.
+            </p>
+          </div>
+
+          {selectedCategoryId && (
+            <button
+              onClick={() => onSelectCategory(null)}
+              className="text-xs font-mono font-bold text-[#0d9488] hover:text-[#0f766e] uppercase tracking-wider underline cursor-pointer self-start sm:self-auto"
+            >
+              Mostrar Todas as Categorias
+            </button>
+          )}
         </div>
 
-        {/* Categories Grid Setup */}
+        {/* Categories Grid Setup without any icons */}
         <div 
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5" 
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" 
           id="categories-grid-root"
         >
-          {categories.map((cat) => {
+          {categories.map((cat, index) => {
             const isSelected = selectedCategoryId === cat.id;
+            const indexStr = String(index + 1).padStart(2, "0");
+
             return (
               <button
                 key={cat.id}
                 onClick={() => onSelectCategory(isSelected ? null : cat.id)}
-                className={`flex items-center gap-4 p-4 text-left border rounded-sm transition-all duration-150 cursor-pointer ${
+                className={`flex flex-col justify-between p-4 text-left border rounded-xl transition-all duration-150 cursor-pointer ${
                   isSelected
                     ? "bg-[#0d9488] border-[#0d9488] text-white shadow-xs"
-                    : "bg-slate-50 border-slate-100 hover:bg-slate-100 text-[#0a2540] hover:border-slate-200"
+                    : "bg-slate-50/80 border-slate-200/80 hover:bg-slate-100 hover:border-slate-300 text-[#0a2540]"
                 }`}
                 id={`category-pill-${cat.id}`}
               >
-                {/* Monochromatic icon wrapping */}
-                <div 
-                  className={`p-2.5 rounded-sm flex items-center justify-center ${
-                    isSelected ? "bg-white/10 text-white" : "bg-white text-slate-600 border border-slate-100"
-                  }`} 
-                  id={`category-icon-box-${cat.id}`}
-                >
-                  <CategoryIcon name={cat.iconName} className="h-5 w-5" />
-                </div>
-
-                <div className="flex flex-col" id={`category-text-${cat.id}`}>
-                  <span className="font-semibold text-sm font-sans tracking-tight" id={`category-name-${cat.id}`}>
-                    {cat.name}
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className={`text-[10px] font-mono font-bold tracking-wider ${
+                    isSelected ? "text-teal-100" : "text-[#0d9488]"
+                  }`}>
+                    {indexStr}
                   </span>
                   <span 
-                    className={`text-xs ${isSelected ? "text-teal-100" : "text-slate-400"} font-mono mt-0.5`}
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      isSelected ? "bg-white/20 text-white" : "bg-white text-slate-600 border border-slate-200"
+                    }`}
                     id={`category-count-${cat.id}`}
                   >
-                    {cat.count} Cursos
+                    {cat.count} {cat.count === 1 ? "curso" : "cursos"}
                   </span>
                 </div>
+
+                <span className="font-bold text-xs sm:text-sm font-sans tracking-tight" id={`category-name-${cat.id}`}>
+                  {cat.name}
+                </span>
               </button>
             );
           })}
         </div>
-
-        {/* Filter Reset Quick Bar */}
-        {selectedCategoryId && (
-          <div className="mt-8 flex justify-center animate-fade-in" id="categories-active-filter-bar">
-            <button
-              onClick={() => onSelectCategory(null)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[#0d9488] text-xs font-semibold uppercase tracking-wider text-[#0d9488] hover:bg-teal-50 rounded-sm cursor-pointer transition-colors"
-              id="reset-filter-btn"
-            >
-              <span>Exibindo Apenas Categoria Selecionada. Limpar Filtro</span>
-              <Icons.X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
       </div>
     </section>
   );
