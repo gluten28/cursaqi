@@ -294,7 +294,10 @@ export default function App() {
           setAllMaterials(initialMaterials);
         }
 
-        if (dbBans && dbBans.length > 0) setBanners(dbBans);
+        if (Array.isArray(dbBans)) {
+          setBanners(dbBans);
+          localStorage.setItem("cursaqi_banners_v2", JSON.stringify(dbBans));
+        }
         if (dbMethods) setPaymentMethods(dbMethods);
 
         // Current active session synced with DB record
@@ -675,40 +678,77 @@ export default function App() {
   };
 
   // --- ANSWER QUIZ & TRIGGER PROGRESS UPGRADE ---
-  const handleSaveQuizResult = (courseId: string, quizId: string, isCorrect: boolean) => {
+  const handleSaveQuizResult = (
+    courseId: string, 
+    quizId: string, 
+    isCorrect: boolean,
+    selectedOptionText?: string,
+    questionText?: string
+  ) => {
     if (!currentUser) return;
 
-    // Find progress entry
-    const entryIndex = currentUser.enrolledCourseProgress?.findIndex(p => p.courseId === courseId);
-    if (entryIndex === -1 || entryIndex === undefined) return;
+    // Course info
+    const foundCourse = courses.find(c => c.id === courseId);
+    const courseTitle = foundCourse?.title || "Curso CUrsaQi";
 
-    const currentProgressList = [...currentUser.enrolledCourseProgress];
-    const prevProgress = currentProgressList[entryIndex];
+    // Quiz info
+    const foundQuiz = quizzes.find(q => q.id === quizId);
+    const qText = questionText || foundQuiz?.question || "Pergunta de fixação";
+    const optText = selectedOptionText || (foundQuiz && foundQuiz.options ? foundQuiz.options[foundQuiz.correctIndex] : (isCorrect ? "Opção Correta" : "Opção Incorreta"));
 
-    // Read unique quiz array
-    const alreadyAnswered = prevProgress.completedQuizzes?.includes(quizId);
-    let updatedAnswers = prevProgress.completedQuizzes || [];
+    // Find or create progress entry
+    const currentProgressList = currentUser.enrolledCourseProgress ? [...currentUser.enrolledCourseProgress] : [];
+    let entryIndex = currentProgressList.findIndex(p => p.courseId === courseId);
 
-    if (isCorrect && !alreadyAnswered) {
-      updatedAnswers = [...updatedAnswers, quizId];
+    if (entryIndex === -1) {
+      const newProg: UserProgress = {
+        courseId,
+        progress: 0,
+        completedLessons: [],
+        completedQuizzes: [],
+        startedAt: new Date().toLocaleDateString("pt-PT"),
+      };
+      currentProgressList.push(newProg);
+      entryIndex = currentProgressList.length - 1;
     }
 
-    // Calculate next progress percent.
-    // Progress = (answered quizzes / total quizzes of course) * 100
+    const prevProgress = currentProgressList[entryIndex];
+    const prevCompleted = prevProgress.completedQuizzes || [];
+    let updatedAnswers = prevCompleted;
+
+    if (isCorrect && !prevCompleted.includes(quizId)) {
+      updatedAnswers = [...prevCompleted, quizId];
+    }
+
+    // Calculate next progress percent
     const courseQuizzesCount = quizzes.filter(q => q.courseId === courseId && q.type !== "exam").length || 1;
     const computedProgress = Math.min(100, Math.round((updatedAnswers.length / courseQuizzesCount) * 100));
 
     const updatedProgress: UserProgress = {
       ...prevProgress,
       completedQuizzes: updatedAnswers,
-      progress: Math.max(prevProgress.progress, computedProgress), // keep highest score
+      progress: Math.max(prevProgress.progress, computedProgress),
     };
 
     currentProgressList[entryIndex] = updatedProgress;
 
+    // Record quiz answer in quizAnswersTrack (both correct and incorrect answers)
+    const prevTrack = currentUser.quizAnswersTrack || {};
+    const updatedTrack = {
+      ...prevTrack,
+      [quizId]: {
+        isCorrect,
+        selectedOption: optText,
+        questionText: qText,
+        date: new Date().toLocaleDateString("pt-PT") + " " + new Date().toLocaleTimeString("pt-PT").slice(0, 5),
+        courseTitle,
+      }
+    };
+
     const updatedMe: UserProfile = {
       ...currentUser,
       enrolledCourseProgress: currentProgressList,
+      quizAnswersTrack: updatedTrack,
     };
 
     syncCurrentUser(updatedMe);
@@ -925,24 +965,36 @@ export default function App() {
 
   // Banners
   const handleAddBanner = async (newB: PromoBanner) => {
-    const nextBans = [...banners, newB];
-    await dbSaveBanner(newB);
-    setBanners(nextBans);
-    localStorage.setItem("cursaqi_banners_v2", JSON.stringify(nextBans));
+    const success = await dbSaveBanner(newB);
+    if (!success) {
+      throw new Error("Não foi possível salvar o anúncio no Supabase.");
+    }
+    setBanners(prev => {
+      const next = [newB, ...prev.filter(b => b.id !== newB.id)];
+      localStorage.setItem("cursaqi_banners_v2", JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleUpdateBanner = async (updatedB: PromoBanner) => {
-    const nextBans = banners.map(b => b.id === updatedB.id ? updatedB : b);
-    await dbSaveBanner(updatedB);
-    setBanners(nextBans);
-    localStorage.setItem("cursaqi_banners_v2", JSON.stringify(nextBans));
+    const success = await dbSaveBanner(updatedB);
+    if (!success) {
+      throw new Error("Não foi possível atualizar o anúncio no Supabase.");
+    }
+    setBanners(prev => {
+      const next = prev.map(b => b.id === updatedB.id ? updatedB : b);
+      localStorage.setItem("cursaqi_banners_v2", JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleDeleteBanner = async (bId: string) => {
-    const nextBans = banners.filter(b => b.id !== bId);
     await dbDeleteBanner(bId);
-    setBanners(nextBans);
-    localStorage.setItem("cursaqi_banners_v2", JSON.stringify(nextBans));
+    setBanners(prev => {
+      const next = prev.filter(b => b.id !== bId);
+      localStorage.setItem("cursaqi_banners_v2", JSON.stringify(next));
+      return next;
+    });
   };
 
   // Student list moderators
@@ -1444,12 +1496,6 @@ export default function App() {
                 />
               ) : (
                 <div className="space-y-8" id="visitor-explorer-body">
-                  {/* Banner structures */}
-                  <CtaBanners
-                    onLearnMoreLeft={handleScrollToCourses}
-                    onLearnMoreRight={handleScrollToCourses}
-                  />
-
                   {/* Popular Courses Section for Guests */}
                   <section className="bg-white px-6 py-8 rounded-2xl border border-slate-200/90 shadow-2xs scroll-mt-20" id="popular-courses-anchor">
                     <div className="w-full" id="popular-courses-container">
