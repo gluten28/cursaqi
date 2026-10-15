@@ -27,9 +27,9 @@ interface AdminPanelProps {
   onAddMaterial: (material: DidacticMaterial) => void;
   onUpdateMaterial: (material: DidacticMaterial) => void;
   onDeleteMaterial: (materialId: string) => void;
-  onAddBanner: (banner: PromoBanner) => void;
-  onUpdateBanner: (banner: PromoBanner) => void;
-  onDeleteBanner: (bannerId: string) => void;
+  onAddBanner: (banner: PromoBanner) => Promise<void> | void;
+  onUpdateBanner: (banner: PromoBanner) => Promise<void> | void;
+  onDeleteBanner: (bannerId: string) => Promise<void> | void;
   onUpdateUserProfile: (profile: UserProfile) => void;
   onDeleteUser: (userId: string) => void;
   onClose: () => void;
@@ -511,8 +511,8 @@ export default function AdminPanel({
       return;
     }
 
-    if (!editingBannerId && !bannerImageFile) {
-      triggerAlert("error", "Por favor, carregue uma imagem para o anúncio.");
+    if (!editingBannerId && !bannerImageFile && !bannerImageUrl.trim()) {
+      triggerAlert("error", "Por favor, selecione ou insira uma imagem para o anúncio.");
       return;
     }
 
@@ -523,7 +523,7 @@ export default function AdminPanel({
       if (bannerImageFile) {
         const uploadedUrl = await dbUploadBannerImage(bannerImageFile);
         if (!uploadedUrl) {
-          triggerAlert("error", "Erro ao fazer upload da imagem do anúncio.");
+          triggerAlert("error", "Erro ao processar a imagem do anúncio.");
           setUploadingBanner(false);
           return;
         }
@@ -542,11 +542,11 @@ export default function AdminPanel({
       };
 
       if (editingBannerId) {
-        onUpdateBanner(item);
+        await onUpdateBanner(item);
         triggerAlert("success", "Anúncio atualizado com sucesso.");
       } else {
-        onAddBanner(item);
-        triggerAlert("success", "Novo anúncio publicado com sucesso.");
+        await onAddBanner(item);
+        triggerAlert("success", "Novo anúncio publicado e salvo com sucesso.");
       }
       
       // Reset form
@@ -2090,6 +2090,16 @@ export default function AdminPanel({
                       PNG, JPG, JPEG ou WEBP (formato vertical estilo Instagram recomendado)
                     </p>
                   </div>
+
+                  <div className="mt-2">
+                    <input
+                      type="url"
+                      placeholder="Ou cole a URL direta da imagem (https://...)"
+                      value={bannerImageUrl}
+                      onChange={(e) => setBannerImageUrl(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 text-xs font-mono rounded-xs focus:outline-[#0d9488]"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 pb-1">
@@ -2216,10 +2226,10 @@ export default function AdminPanel({
                               <Edit3 className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={async () => {
                                 if (confirm(`Deseja mesmo remover o anúncio: "${b.title}"?`)) {
-                                  onDeleteBanner(b.id);
-                                  triggerAlert("success", "Anúncio deletado.");
+                                  await onDeleteBanner(b.id);
+                                  triggerAlert("success", "Anúncio deletado com sucesso.");
                                 }
                               }}
                               className="p-1 text-rose-600 hover:bg-rose-50 rounded-xs transition-colors cursor-pointer"

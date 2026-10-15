@@ -15,7 +15,7 @@ interface CourseModalProps {
   onEnrollCourse: (courseId: string) => void;
   quizzes: Quiz[];
   courseVideos: CourseVideo[];
-  onSaveQuizResult: (courseId: string, quizId: string, isCorrect: boolean) => void;
+  onSaveQuizResult: (courseId: string, quizId: string, isCorrect: boolean, selectedOptionText?: string, questionText?: string) => void;
   onSaveExamResult: (courseId: string, score: number, date: string, certificateId: string) => void;
   onViewCertificate: (course: Course, score: number, date: string, certificateId: string) => void;
   onWatchVideo?: (courseId: string, videoId: string) => void;
@@ -82,7 +82,18 @@ export default function CourseModal({
 
   // Quiz interactive states
   const [selectedAnswers, setSelectedAnswers] = useState<{ [quizId: string]: number }>({});
-  const [evaluatedQuizzes, setEvaluatedQuizzes] = useState<{ [quizId: string]: { evaluated: boolean; correct: boolean } }>({});
+  const [evaluatedQuizzes, setEvaluatedQuizzes] = useState<{ [quizId: string]: { evaluated: boolean; correct: boolean } }>(() => {
+    const initial: { [quizId: string]: { evaluated: boolean; correct: boolean } } = {};
+    const track = currentUser?.quizAnswersTrack || {};
+    Object.keys(track).forEach(qId => {
+      initial[qId] = { evaluated: true, correct: track[qId].isCorrect };
+    });
+    // Also consider completed quizzes
+    (enrollmentProgress?.completedQuizzes || []).forEach(qId => {
+      initial[qId] = { evaluated: true, correct: true };
+    });
+    return initial;
+  });
 
   // Final Exam simulation states
   const [isExamActive, setIsExamActive] = useState(false);
@@ -110,6 +121,7 @@ export default function CourseModal({
     if (selected === undefined) return;
 
     const isCorrect = selected === q.correctIndex;
+    const selectedText = q.options && q.options[selected] ? q.options[selected] : `Opção ${selected + 1}`;
     
     // Save locally
     setEvaluatedQuizzes((prev) => ({
@@ -118,7 +130,7 @@ export default function CourseModal({
     }));
 
     // Trigger parent database progress sync
-    onSaveQuizResult(course.id, q.id, isCorrect);
+    onSaveQuizResult(course.id, q.id, isCorrect, selectedText, q.question);
   };
 
   const handleSubmitFinalExam = () => {
@@ -136,12 +148,16 @@ export default function CourseModal({
 
     setExamFeedbackError("");
 
-    // Calculate score
+    // Calculate score and record every exam question answer to tracking
     let correctCount = 0;
     questionsToEvaluate.forEach((q, idx) => {
-      if (examAnswers[idx] === q.correctIndex) {
+      const isCorrect = examAnswers[idx] === q.correctIndex;
+      if (isCorrect) {
         correctCount++;
       }
+      const selectedIdx = examAnswers[idx];
+      const selectedText = q.options && q.options[selectedIdx] ? q.options[selectedIdx] : (selectedIdx !== undefined ? `Opção ${selectedIdx + 1}` : "Sem resposta");
+      onSaveQuizResult(course.id, q.id || `exam-${course.id}-${idx}`, isCorrect, selectedText, q.question);
     });
 
     const finalPercentage = Math.round((correctCount / questionsToEvaluate.length) * 100);

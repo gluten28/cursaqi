@@ -139,28 +139,33 @@ export function mapMaterialToDB(m: DidacticMaterial) {
 
 // --- PROMO BANNERS MAPPING ---
 export function mapBannerToJS(row: any): PromoBanner {
+  const isCourseLink = typeof row.link_url === "string" && row.link_url.startsWith("course:");
+  const courseId = isCourseLink ? row.link_url.replace("course:", "") : (row.course_id || undefined);
+  const linkUrl = isCourseLink ? undefined : (row.link_url || row.url || undefined);
+
   return {
     id: row.id,
     title: row.title || "",
     subtitle: row.subtitle || "",
-    buttonText: row.button_text || "",
-    isActive: !!row.is_active,
+    buttonText: row.button_text || "Saber Mais",
+    isActive: row.is_active !== false,
     imageUrl: row.image_url || undefined,
-    courseId: row.course_id || undefined,
-    linkUrl: row.link_url || row.url || undefined
+    courseId,
+    linkUrl
   };
 }
 
 export function mapBannerToDB(b: PromoBanner) {
+  // NOTE: Supabase table 'promo_banners' has columns: id, title, subtitle, button_text, is_active, image_url, link_url.
+  // It does NOT have 'course_id'. We encode courseId into link_url if present.
   return {
     id: b.id,
     title: b.title,
     subtitle: b.subtitle || "",
-    button_text: b.buttonText || "",
-    is_active: !!b.isActive,
+    button_text: b.buttonText || "Saber Mais",
+    is_active: b.isActive !== false,
     image_url: b.imageUrl || null,
-    course_id: b.courseId || null,
-    link_url: b.linkUrl || null
+    link_url: b.linkUrl || (b.courseId ? `course:${b.courseId}` : null)
   };
 }
 
@@ -1112,35 +1117,151 @@ export async function dbCheckAndExpirePremium(user: UserProfile): Promise<UserPr
   return user;
 }
 
+/**
+ * Redimensiona e comprime uma imagem no navegador para no máximo 1200px de largura/altura
+ * e qualidade 0.85, reduzindo fotos pesadas para ~120KB-200KB sem perda visual perceptível.
+ */
+export async function compressImageToBlob(file: File, maxDim = 1200, quality = 0.85): Promise<Blob | File> {
+  if (typeof window === "undefined" || typeof FileReader === "undefined") {
+    return file;
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Converte arquivo de imagem para Data URL comprimido (fallback caso Storage falhe).
+ */
+export async function compressImageToDataUrl(file: File, maxDim = 1000, quality = 0.8): Promise<string> {
+  if (typeof window === "undefined" || typeof FileReader === "undefined") {
+    return "";
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve((e.target?.result as string) || "");
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => resolve((e.target?.result as string) || "");
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve("");
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function dbUploadBannerImage(file: File): Promise<string | null> {
-  const rawExt = file.name.split('.').pop() || 'png';
-  const fileExt = rawExt.replace(/[^a-zA-Z0-9]/g, "").substring(0, 5).toLowerCase();
-  const cleanName = `banner_${Date.now()}.${fileExt}`;
-  
-  const filePath = `banners/${cleanName}`;
-  
-  const { data, error } = await supabase.storage
-    .from('payment-receipts')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: true
-    });
+  const cleanExt = (file.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, "").substring(0, 5).toLowerCase() || 'jpg';
+  const cleanName = `banner_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${cleanExt}`;
 
-  if (error) {
-    console.error("Error uploading banner image:", error.message);
-    return null;
+  // 1. Otimizar e comprimir o arquivo para upload rápido
+  let uploadBlob: Blob | File = file;
+  try {
+    uploadBlob = await compressImageToBlob(file, 1200, 0.85);
+  } catch (err) {
+    console.warn("Compressão de imagem ignorada, usando arquivo original:", err);
   }
 
-  const { data: signedData, error: signedError } = await supabase.storage
-    .from('payment-receipts')
-    .createSignedUrl(filePath, 315360000); // 10 years
+  // 2. Tentar upload nos buckets Supabase Storage ('promo_banners' prioritário e 'banners')
+  const candidateBuckets = ['promo_banners', 'banners'];
+  for (const bucket of candidateBuckets) {
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(cleanName, uploadBlob, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
-  if (signedError) {
-    console.error("Error creating signed URL for banner image:", signedError.message);
-    return null;
+      if (!error && data?.path) {
+        const { data: pubData } = supabase.storage.from(bucket).getPublicUrl(cleanName);
+        if (pubData?.publicUrl) {
+          console.log(`Imagem do anúncio salva com sucesso no Supabase Storage (bucket "${bucket}"):`, pubData.publicUrl);
+          return pubData.publicUrl;
+        }
+      } else if (error) {
+        console.warn(`Tentativa no bucket "${bucket}" retornou:`, error.message);
+      }
+    } catch (err) {
+      console.warn(`Exceção ao tentar upload no bucket "${bucket}":`, err);
+    }
   }
 
-  return signedData?.signedUrl || null;
+  // 3. Fallback seguro: comprimir para Data URL (~100-200KB) para que o anúncio NUNCA falhe ou seja bloqueado
+  try {
+    const dataUrl = await compressImageToDataUrl(file, 1000, 0.8);
+    if (dataUrl) {
+      console.log("Upload em storage indisponível; utilizando Data URL otimizada como fallback.");
+      return dataUrl;
+    }
+  } catch (err) {
+    console.warn("Falha no fallback de Data URL comprimida:", err);
+  }
+
+  return null;
 }
 
 export async function dbUploadUserAvatar(file: File, userId: string): Promise<string | null> {
