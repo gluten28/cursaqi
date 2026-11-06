@@ -29,3 +29,25 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* TV News Ticker / Marquee Continuous Sliding Animation */
+@keyframes tickerTape {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ticker-tape {
+  display: flex;
+  width: max-content;
+  animation: tickerTape 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker-tape:hover {
+  animation-play-state: paused;
+}
+

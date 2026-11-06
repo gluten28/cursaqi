@@ -4,7 +4,8 @@ import Categories from "./components/Categories";
 import CtaBanners from "./components/CtaBanners";
 import CourseCard from "./components/CourseCard";
 import HomeWelcomeCard from "./components/HomeWelcomeCard";
-import ScrollFollowingAds from "./components/ScrollFollowingAds";
+import CoursesTvTicker from "./components/CoursesTvTicker";
+import InviteVideoSection from "./components/InviteVideoSection";
 import CourseModal from "./components/CourseModal";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AuthScreen from "./pages/AuthScreen";
@@ -1089,13 +1090,15 @@ export default function App() {
     }
   };
 
-  const isLandingPage = (currentView === "home" || currentView === "dashboard") && !currentUser && !selectedCourse && !activeCertificate && !isStudying;
+  // O menu lateral (Sidebar) só deve aparecer se e quando o visitante fizer o cadastro e/ou login na plataforma:
+  const showSidebar = Boolean(currentUser) && currentView !== "auth";
+  const isPublicVisitor = !currentUser && currentView !== "auth";
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row font-sans selection:bg-[#0d9488]/20" id="cursaqi-react-root">
       
-      {/* Universal Sidebar Navigation - hidden on public landing page as requested */}
-      {!isLandingPage && (
+      {/* Menu Lateral (Sidebar) - Apenas exibido para utilizadores autenticados */}
+      {showSidebar && (
         <Sidebar
           currentView={currentView}
           onViewChange={(view) => {
@@ -1145,11 +1148,11 @@ export default function App() {
         />
       )}
 
-      {/* Main Content Area - with left margin offset on desktop (offset removed on landing page) */}
-      <div className={`flex-1 flex flex-col min-w-0 ${isLandingPage ? "" : "lg:pl-72"} justify-between min-h-screen`}>
+      {/* Main Content Area - with left margin offset on desktop ONLY when sidebar is visible */}
+      <div className={`flex-1 flex flex-col min-w-0 ${showSidebar ? "lg:pl-72" : ""} justify-between min-h-screen`}>
 
-        {/* Landing Page Top Navigation Bar (when sidebar is hidden on public landing page) */}
-        {isLandingPage && (
+        {/* Public Top Navigation Bar (Sem menu lateral - com botões de Entrar e Criar Conta) */}
+        {isPublicVisitor && (
           <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-40 px-4 md:px-8 py-3.5 shadow-2xs" id="landing-page-topbar">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               {/* Brand Logo */}
@@ -1171,7 +1174,7 @@ export default function App() {
                     CUrsaQi
                   </span>
                   <span className="text-[9.5px] font-mono uppercase tracking-wider text-teal-600 font-semibold mt-0.5">
-                    Cursos de Informática
+                    Ensino Prático de Informática
                   </span>
                 </div>
               </button>
@@ -1183,13 +1186,18 @@ export default function App() {
                     setCurrentView("home");
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="text-[#0d9488] cursor-pointer"
+                  className={`${currentView === "home" ? "text-[#0d9488]" : "text-slate-600 hover:text-[#0d9488]"} transition-colors cursor-pointer`}
                 >
                   Início
                 </button>
                 <button 
                   onClick={() => {
-                    handleScrollToCourses();
+                    if (currentView !== "home") {
+                      setCurrentView("home");
+                      setTimeout(() => handleScrollToCourses(), 100);
+                    } else {
+                      handleScrollToCourses();
+                    }
                   }}
                   className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
                 >
@@ -1197,19 +1205,19 @@ export default function App() {
                 </button>
                 <button 
                   onClick={() => setCurrentView("community")}
-                  className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
+                  className={`${currentView === "community" ? "text-[#0d9488]" : "text-slate-600 hover:text-[#0d9488]"} transition-colors cursor-pointer`}
                 >
                   Comunidade
                 </button>
                 <button 
                   onClick={() => setCurrentView("about")}
-                  className="text-slate-600 hover:text-[#0d9488] transition-colors cursor-pointer"
+                  className={`${currentView === "about" ? "text-[#0d9488]" : "text-slate-600 hover:text-[#0d9488]"} transition-colors cursor-pointer`}
                 >
                   Sobre Nós
                 </button>
               </nav>
 
-              {/* Auth Actions */}
+              {/* Auth Actions (Login & Register CTA buttons) */}
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => {
@@ -1232,6 +1240,14 @@ export default function App() {
               </div>
             </div>
           </header>
+        )}
+
+        {/* TV News Ticker Slide: Rodapé de TV passando cursos em tempo real na landing page */}
+        {isPublicVisitor && (currentView === "home" || currentView === "dashboard") && !selectedCourse && !activeCertificate && !isStudying && (
+          <CoursesTvTicker
+            courses={courses}
+            onCourseClick={(c) => handleOpenCourse(c)}
+          />
         )}
 
         {/* Notification drawer component with simulator */}
@@ -1453,12 +1469,11 @@ export default function App() {
           />
         </main>
       ) : (
-        /* Unified Home Page Layout (Welcome Card on Left + Scroll-Following Ads on Right) */
+        /* Unified Home Page Layout */
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 mt-5 mb-12" id="main-home-layout">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+          <div className="flex flex-col space-y-8">
             
-            {/* Left Column (8 cols): Single Welcome Card at top, then Student Dashboard or Visitor Catalog */}
-            <div className="lg:col-span-8 flex flex-col space-y-8 min-w-0">
+            {/* Welcome Card */}
               {/* Exactly 1 Welcome Card */}
               <HomeWelcomeCard
                 currentUser={currentUser}
@@ -1475,6 +1490,21 @@ export default function App() {
                 }}
                 onNavigateToView={(view) => setCurrentView(view)}
               />
+
+              {/* Invite Video Section — only for visitors */}
+              {!currentUser && (
+                <InviteVideoSection
+                  onRegisterClick={() => {
+                    setAuthScreenMode("register");
+                    setCurrentView("auth");
+                  }}
+                  onLoginClick={() => {
+                    setAuthScreenMode("login");
+                    setCurrentView("auth");
+                  }}
+                  onExploreCourses={handleScrollToCourses}
+                />
+              )}
 
               {/* Page Content: Student Dashboard OR Visitor Explorer */}
               {currentUser ? (
@@ -1572,20 +1602,33 @@ export default function App() {
 
                     </div>
                   </section>
+
+                  {/* Final CTA Banner */}
+                  <div className="w-full bg-[#0a2540] rounded-2xl px-8 py-10 text-center space-y-5">
+                    <p className="text-xs font-mono font-bold uppercase tracking-widest text-[#0d9488]">Pronto para começar?</p>
+                    <h3 className="font-display font-black text-2xl md:text-3xl text-white leading-tight">
+                      Junte-se a quem já está a aprender<br className="hidden md:block" /> e a crescer profissionalmente.
+                    </h3>
+                    <p className="text-sm text-slate-300 font-sans max-w-md mx-auto">
+                      Crie a sua conta gratuita hoje e tenha acesso imediato ao catálogo de cursos práticos.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                      <button
+                        onClick={() => { setAuthScreenMode("register"); setCurrentView("auth"); }}
+                        className="px-7 py-3 bg-[#0d9488] hover:bg-[#0f766e] text-white text-sm font-bold tracking-wider uppercase rounded-sm transition-colors cursor-pointer font-sans"
+                      >
+                        Criar Conta Gratuita
+                      </button>
+                      <button
+                        onClick={() => { setAuthScreenMode("login"); setCurrentView("auth"); }}
+                        className="px-7 py-3 border border-white/30 hover:border-white text-white text-sm font-semibold tracking-wider uppercase rounded-sm transition-colors cursor-pointer font-sans"
+                      >
+                        Iniciar Sessão
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-
-            {/* Right Column (4 cols): Scroll Following Ads Card that moves up and down on scroll */}
-            <div className="lg:col-span-4 w-full h-full relative">
-              <ScrollFollowingAds
-                banners={banners}
-                courses={courses}
-                onExploreCourses={handleScrollToCourses}
-                onCourseClick={(course) => handleOpenCourse(course)}
-              />
-            </div>
-
           </div>
         </main>
       )}

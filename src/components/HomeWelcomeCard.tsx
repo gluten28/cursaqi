@@ -48,77 +48,77 @@ export default function HomeWelcomeCard({
             </p>
           </div>
         ) : (
-          // Guest / Visitor landing hero presentation
-          <div className="space-y-3">
+          // Guest / Visitor landing hero presentation (Natural, Convidativa, Sem Estatísticas)
+          <div className="space-y-4">
             <div className="inline-flex items-center gap-2">
-              <span className="text-[10.5px] font-mono font-extrabold uppercase tracking-widest text-[#0d9488] bg-teal-50 px-3 py-1 rounded-md border border-teal-200/70">
-                Plataforma de Ensino Prático de Informática
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-[#0d9488] bg-teal-50 px-3 py-1 rounded-md border border-teal-200/70">
+                Ensino Prático de Informática • Moçambique
               </span>
             </div>
 
             <h1 className="font-display font-black text-2xl sm:text-4xl text-[#0a2540] tracking-tight leading-tight">
-              Aprenda Informática e Tecnologia <span className="text-[#0d9488]">de Forma Prática</span>
+              Aprenda Informática e Tecnologia <span className="text-[#0d9488]">de Forma Prática e Direta</span>
             </h1>
             
             <p className="text-xs sm:text-sm text-slate-600 font-sans leading-relaxed max-w-2xl">
-              Cursos estruturados passo a passo pelo Formador Aldo Valige. Domine hardware, redes de computadores, sistemas e programação com aulas gravadas em vídeo, questionários práticos e emissão de certificado de participação na plataforma.
+              Cansado de cursos cheios de teorias sem aplicação? Na CUrsaQi, o Formador Aldo Valige ensina passo a passo no computador o que o mercado de trabalho realmente exige: montagem e manutenção, redes, Excel avançado e programação.
             </p>
           </div>
         )}
 
-        {/* 4 Feature Pillars (Typography-Driven, Without Emojis or Icons) */}
+        {/* 4 Feature Pillars (Typography-Driven, Without Emojis, No Fake Statistics) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+          <div className="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
             <span className="block text-[10px] font-mono font-extrabold text-[#0d9488] tracking-widest">
-              01
+              PASSO A PASSO
             </span>
             <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
               Aulas em Vídeo
             </span>
             <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
-              100% Práticas
+              100% gravadas na tela
             </span>
           </div>
 
-          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+          <div className="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
             <span className="block text-[10px] font-mono font-extrabold text-amber-600 tracking-widest">
-              02
+              CERTIFICAÇÃO
             </span>
             <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
-              Certificação
+              Exame Final
             </span>
             <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
-              Participação na Plataforma
+              Certificado de participação
             </span>
           </div>
 
-          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+          <div className="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
             <span className="block text-[10px] font-mono font-extrabold text-indigo-600 tracking-widest">
-              03
+              FIXAÇÃO
             </span>
             <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
-              Comunidade QI
+              Questionários
             </span>
             <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
-              Troca de Ideias ao Vivo
+              Treine módulo a módulo
             </span>
           </div>
 
-          <div className="p-3 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
+          <div className="p-3.5 bg-slate-50/90 border border-slate-200/80 rounded-xl text-left">
             <span className="block text-[10px] font-mono font-extrabold text-emerald-600 tracking-widest">
-              04
+              PROXIMIDADE
             </span>
             <span className="block text-xs font-bold text-slate-900 mt-1 truncate">
-              Suporte FalaQI
+              Suporte com Formador
             </span>
             <span className="block text-[10px] text-slate-500 font-sans mt-0.5">
-              Apoio Pedagógico Direto
+              Canal direto no WhatsApp
             </span>
           </div>
         </div>
       </div>
 
-      {/* Bottom Actions Row (No Icons, Pure Elegant Typography) */}
+      {/* Bottom Actions Row */}
       <div className="relative pt-6 mt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
         {currentUser ? (
           // Actions for logged-in user
@@ -147,37 +147,37 @@ export default function HomeWelcomeCard({
             </div>
           </>
         ) : (
-          // Actions for visitor / landing page
+          // Actions for visitor / landing page: Prominent CTAs (Cadastre-se, Entrar, Explorar)
           <>
             <div className="text-xs text-slate-500 font-sans">
-              <span className="font-semibold text-slate-700">Inscrição Imediata:</span> Acesso contínuo aos módulos gravados e materiais de apoio.
+              <span className="font-semibold text-slate-800">Crie a sua conta em 30 segundos:</span> acesse as aulas práticas e materiais didáticos imediatamente.
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
-              <button
-                onClick={onExploreCourses}
-                className="px-5 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
-              >
-                Explorar Cursos
-              </button>
-
               {onRegisterClick && (
                 <button
                   onClick={onRegisterClick}
-                  className="px-4 py-2.5 bg-[#0a2540] hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
                 >
-                  Criar Conta
+                  Criar Conta Gratuita
                 </button>
               )}
 
-              {onNavigateToView && (
+              {onLoginClick && (
                 <button
-                  onClick={() => onNavigateToView("about")}
-                  className="px-3 py-2 text-xs text-slate-600 hover:text-slate-900 font-semibold cursor-pointer transition-colors"
+                  onClick={onLoginClick}
+                  className="px-4 py-2.5 bg-[#0a2540] hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
                 >
-                  Sobre Nós
+                  Iniciar Sessão
                 </button>
               )}
+
+              <button
+                onClick={onExploreCourses}
+                className="px-4 py-2.5 border border-slate-200 hover:border-slate-400 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              >
+                Ver Catálogo
+              </button>
             </div>
           </>
         )}
